@@ -1,16 +1,13 @@
 from main_api import TornAPI
-from sections import Sections
+from sections import Sections, User
 
 api = TornAPI()
 sections = Sections(api)
+api_user = User(api,'')
+api_user_ammo = User.Ammo(api,"")
 
-# Get user's ammo
-user_ammo = sections.user.ammo()
 
-for ammo in user_ammo:
-    print(f"Ammo: {ammo['type']} (ID: {ammo['ammo_id']})")
-    print(f"  Quantity: {ammo['quantity']}")
-    print(f"  Equipped: {'Yes' if ammo['equipped'] else 'No'}")
-    print("---")
+print(f"equpped_ammo: {api_user_ammo.ammo_data[0].equipped} Qty:{api_user_ammo.ammo_data[0].quantity}")
 
-api.close()
+for ammo in User.Ammo(api,"").ammo_data:
+    print(f"ammo size: {ammo.size}, qty:{ammo.quantity}")

@@ -6,7 +6,7 @@ from main_api import TornAPI
 from logger import setup_logger, close_logger
 
 # Set up the logger for the sections module
-logger, file_handler = setup_logger(name='sections', level=logging.DEBUG)
+logger, file_handler = setup_logger(name='sections', level=logging.CRITICAL)
 
 class User:
     def __init__(self, api: TornAPI, user_id: int):

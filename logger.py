@@ -1,7 +1,7 @@
 import logging
 import os
 
-def setup_logger(name='my_logger', level=logging.DEBUG):
+def setup_logger(name='my_logger', level=logging.CRITICAL):
     """Sets up a logger with a specified name and level.
 
     Args:
