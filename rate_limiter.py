@@ -1,4 +1,6 @@
 import time
+from env_loader import load_environment_variables
+from logger import setup_logger
 
 class RateLimiter:
     def __init__(self, limit=100, timeframe=60):
@@ -11,6 +13,11 @@ class RateLimiter:
         self.limit = limit  # Maximum requests allowed
         self.timeframe = timeframe  # Timeframe in seconds
         self.requests = []  # List to track timestamps of requests
+        env = load_environment_variables()
+        if env is None:
+            raise ValueError("Failed to load environment variables.")
+
+        self.logger, self.file_handler = setup_logger('RateLimiter', env['DEBUG_LEVEL'])
 
     def _clean_up(self):
         """Remove timestamps older than the timeframe."""
@@ -29,18 +36,19 @@ class RateLimiter:
         if self.request_allowed():
             self.requests.append(time.time())  # Record the time of the request
         else:
+            self.logger.debug("Request limit exceeded")
             raise Exception("Request limit exceeded")  # Raise an error if the limit is exceeded
 
 
-# Usage
-rate_limiter = RateLimiter()
+# # Usage
+# rate_limiter = RateLimiter()
 
-try:
-    if rate_limiter.request_allowed():
-        # Make your API call here
-        print("Request is allowed")
-        rate_limiter.log_request()  # Log the request if it's allowed
-    else:
-        print("Request limit exceeded")
-except Exception as e:
-    print(e)
+# try:
+#     if rate_limiter.request_allowed():
+#         # Make your API call here
+#         logger.info("Request is allowed.")
+#         rate_limiter.log_request()  # Log the request if it's allowed
+#     else:
+#         print("Request limit exceeded")
+# except Exception as e:
+#     print(e)

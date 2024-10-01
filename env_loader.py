@@ -23,10 +23,10 @@ def load_environment_variables(env_file='.env'):
 
         # Retrieve API keys for different access levels
         api_keys = {
-            'full': os.getenv('Test-Full'),
-            'limited': os.getenv('Test-Limited'),
-            'min': os.getenv('Test-Min'),
-            'public': os.getenv('Test-Public')
+            'full': os.getenv('Full'),
+            'limited': os.getenv('Limited'),
+            'min': os.getenv('Min'),
+            'public': os.getenv('Public')
         }
         
         return {
