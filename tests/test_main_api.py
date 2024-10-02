@@ -7,7 +7,7 @@ import requests
 # Add the parent directory to sys.path to allow importing main_api
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main_api import TornAPI
+from tornApi import TornAPI
 
 class TestTornAPI(unittest.TestCase):
     @patch('main_api.load_environment_variables')

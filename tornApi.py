@@ -1,5 +1,3 @@
-# main_api.py
-
 import requests
 from urllib.parse import urlencode
 from logger import setup_logger

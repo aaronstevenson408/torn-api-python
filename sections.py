@@ -1,8 +1,7 @@
 # sections.py
-
-import logging
+# TODO: Format each selection to use a fecth class and a sub class of attributes
 from typing import Dict, Any, Optional
-from main_api import TornAPI
+from tornApi import TornAPI
 from env_loader import load_environment_variables
 from logger import setup_logger, close_logger
 
@@ -26,15 +25,44 @@ class User:
         self.criminal_record = self.CriminalRecord(self.api, self.user_id)
         self.discord = self.Discord(self.api, self.user_id)
         self.display_items = self.DisplayItems(self.api, self.user_id)
-        self.education = self.Education(self.api, self.user_id)  # Added Education class
-        self.equipment = self.Equipment(self.api, self.user_id)  # Added Equipment class
-        self.events = self.Events(self.api, self.user_id)  # Added Events class
-        self.gym = self.Gym(self.api, self.user_id)  # Added Gym class
-        self.hof = self.HallOfFame(self.api, self.user_id)  # Added HallOfFame class
-        self.honors = self.Honors(self.api, self.user_id)  # Added Honors class
-        self.icons = self.Icons(self.api, self.user_id)  # Added Icons class
-        self.jobpoints = self.JobPoints(self.api, self.user_id)  # Added JobPoints class
-        self.log = self.Log(self.api, self.user_id)  # Added Log class
+        self.education = self.Education(self.api, self.user_id)
+        self.equipment = self.Equipment(self.api, self.user_id)
+        self.events = self.Events(self.api, self.user_id)
+        self.gym = self.Gym(self.api, self.user_id)
+        self.hof = self.HallOfFame(self.api, self.user_id)
+        self.honors = self.Honors(self.api, self.user_id)
+        self.icons = self.Icons(self.api, self.user_id)
+        self.jobpoints = self.JobPoints(self.api, self.user_id)
+        self.log = self.Log(self.api, self.user_id)
+        self.lookup = self.Lookup(self.api)
+        self.medals = self.Medals(self.api, self.user_id)
+        self.merits = self.Merits(self.api, self.user_id)
+        self.messages = self.Messages(self.api, self.user_id)
+        self.missions = self.Missions(self.api, self.user_id)
+        self.money = self.Money(self.api, self.user_id)
+        self.networth = self.Networth(self.api, self.user_id)
+        self.newevents = self.NewEvents(self.api, self.user_id)
+        self.newmessages = self.NewMessages(self.api, self.user_id)
+        self.notifications = self.Notifications(self.api, self.user_id)
+        self.perks = self.Perks(self.api, self.user_id)
+        self.personalstats = self.PersonalStats(self.api, self.user_id)
+        self.profile = self.Profile(self.api, self.user_id)
+        self.properties = self.Properties(self.api, self.user_id)
+        self.public_status = self.PublicStatus(self.api, self.user_id)
+        self.refills = self.Refills(self.api, self.user_id)
+        self.reports = self.Reports(self.api, self.user_id)
+        self.revives = self.Revives(self.api, self.user_id)
+        self.revives_full = self.RevivesFull(self.api, self.user_id)
+        self.skills = self.Skills(self.api, self.user_id)
+        self.stocks = self.Stocks(self.api, self.user_id)
+        self.timestamp = self.Timestamp(self.api, self.user_id)
+        self.travel = self.Travel(self.api, self.user_id)
+        self.weapon_exp = self.WeaponExp(self.api, self.user_id)
+        self.work_stats = self.WorkStats(self.api, self.user_id)
+
+
+
+
 
         logger.info(f"Initialized User with ID: {self.user_id}")
 
@@ -72,6 +100,10 @@ class User:
                     f"AmmoItem(ammo_id={self.ammo_id}, equipped={self.equipped}, "
                     f"quantity={self.quantity}, size={self.size}, type={self.type}, type_id={self.type_id})"
                 )
+
+        def __repr__(self):
+            return f"Ammo(user_id={self.user_id}, ammo_data={self.ammo_data})"
+
 
     class Basic:
         def __init__(self, api: TornAPI, user_id: Optional[int]):
@@ -871,8 +903,1879 @@ class User:
                 logger.warning(f"No logs found for User ID: {self.user_id}")
                 return {}
 
+    class Lookup:
+        #TODO Probably needs to return an object but returns a list for right now
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.selections = []  # Initialize as an empty list
+            logger.info("Initialized Lookup:")
 
+        def fetch_selections(self):
+            """
+            Fetches a list of all available selections in the API and stores them in self.selections.
 
+            Returns:
+            - list: A list of strings representing the available selections.
+            """
+            logger.debug("Fetching all selections from the API.")
+
+            response = self.api.make_request('user', None, 'lookup')
+
+            if response and 'selections' in response:
+                self.selections = response['selections']  # Save fetched selections
+                logger.info("Selections fetched and stored successfully.")
+                return self.selections
+            else:
+                logger.warning("No selections found.")
+                return []
+
+    class Medals:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.medals_awarded = []
+            self.medals_time = []
+            logger.info(f"Initialized Medals for User ID: {self.user_id}")
+
+        def fetch_medals(self):
+            """
+            Fetches the awarded medals of a player, along with the times when they were awarded.
+
+            Returns:
+            - dict: A dictionary with 'medals_awarded' (list of integers) and 'medals_time' (list of timestamps).
+            """
+            logger.debug(f"Fetching medals for User ID: {self.user_id}")
+
+            response = self.api.make_request('user', self.user_id, 'medals')
+
+            if response and 'medals_awarded' in response and 'medals_time' in response:
+                self.medals_awarded = response['medals_awarded']
+                self.medals_time = response['medals_time']
+                logger.info(f"Medals fetched for User ID: {self.user_id}")
+                return {
+                    'medals_awarded': self.medals_awarded,
+                    'medals_time': self.medals_time
+                }
+            else:
+                logger.warning(f"No medals found for User ID: {self.user_id}")
+                return {}
+
+    class Merits:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.merits_data = None
+            logger.info(f"Initialized Merits for User ID: {self.user_id}")
+
+        def fetch_merits(self):
+            """
+            Fetches the player's assigned merits and sets them as attributes in the MeritsData class.
+
+            Returns:
+            - MeritsData: An instance of the MeritsData class containing the player's merits.
+            """
+            logger.debug(f"Fetching merits for User ID: {self.user_id}")
+
+            response = self.api.make_request('user', self.user_id, 'merits')
+
+            if response and 'merits' in response:
+                self.merits_data = self.MeritsData(response['merits'])
+                logger.info(f"Merits fetched and processed for User ID: {self.user_id}")
+                return self.merits_data
+            else:
+                logger.warning(f"No merits data found for User ID: {self.user_id}")
+                return None
+
+        class MeritsData:
+            """
+            A class representing the player's assigned merits, where each merit is an attribute.
+            """
+            def __init__(self, merits: Dict[str, int]):
+                # Assign each merit type as an attribute
+                self.addiction_mitigation = merits.get('Addiction Mitigation', 0)
+                self.awareness = merits.get('Awareness', 0)
+                self.bank_interest = merits.get('Bank Interest', 0)
+                self.brawn = merits.get('Brawn', 0)
+                self.club_mastery = merits.get('Club Mastery', 0)
+                self.crime_xp = merits.get('Crime XP', 0)
+                self.critical_hit_rate = merits.get('Critical Hit Rate', 0)
+                self.education_length = merits.get('Education Length', 0)
+                self.employee_effectiveness = merits.get('Employee Effectiveness', 0)
+                self.evasion = merits.get('Evasion', 0)
+                self.heavy_artillery_mastery = merits.get('Heavy Artillery Mastery', 0)
+                self.hospitalizing = merits.get('Hospitalizing', 0)
+                self.life_points = merits.get('Life Points', 0)
+                self.machine_gun_mastery = merits.get('Machine Gun Mastery', 0)
+                self.masterful_looting = merits.get('Masterful Looting', 0)
+                self.mechanical_mastery = merits.get('Mechanical Mastery', 0)
+                self.nerve_bar = merits.get('Nerve Bar', 0)
+                self.piercing_mastery = merits.get('Piercing Mastery', 0)
+                self.pistol_mastery = merits.get('Pistol Mastery', 0)
+                self.protection = merits.get('Protection', 0)
+                self.rifle_mastery = merits.get('Rifle Mastery', 0)
+                self.sharpness = merits.get('Sharpness', 0)
+                self.shotgun_mastery = merits.get('Shotgun Mastery', 0)
+                self.slashing_mastery = merits.get('Slashing Mastery', 0)
+                self.smg_mastery = merits.get('SMG Mastery', 0)
+                self.stealth = merits.get('Stealth', 0)
+                self.temporary_mastery = merits.get('Temporary Mastery', 0)
+                logger.debug(f"Processed MeritsData: {self}")
+
+            def __repr__(self):
+                return (f"MeritsData(Addiction Mitigation={self.addiction_mitigation}, Awareness={self.awareness}, "
+                        f"Bank Interest={self.bank_interest}, Brawn={self.brawn}, Club Mastery={self.club_mastery}, "
+                        f"Crime XP={self.crime_xp}, Critical Hit Rate={self.critical_hit_rate}, "
+                        f"Education Length={self.education_length}, Employee Effectiveness={self.employee_effectiveness}, "
+                        f"Evasion={self.evasion}, Heavy Artillery Mastery={self.heavy_artillery_mastery}, "
+                        f"Hospitalizing={self.hospitalizing}, Life Points={self.life_points}, "
+                        f"Machine Gun Mastery={self.machine_gun_mastery}, Masterful Looting={self.masterful_looting}, "
+                        f"Mechanical Mastery={self.mechanical_mastery}, Nerve Bar={self.nerve_bar}, "
+                        f"Piercing Mastery={self.piercing_mastery}, Pistol Mastery={self.pistol_mastery}, "
+                        f"Protection={self.protection}, Rifle Mastery={self.rifle_mastery}, "
+                        f"Sharpness={self.sharpness}, Shotgun Mastery={self.shotgun_mastery}, "
+                        f"Slashing Mastery={self.slashing_mastery}, SMG Mastery={self.smg_mastery}, "
+                        f"Stealth={self.stealth}, Temporary Mastery={self.temporary_mastery})")
+
+    class Messages:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.messages_data = None
+            logger.info(f"Initialized Messages for User ID: {self.user_id}")
+
+        def fetch_messages(self, from_timestamp: Optional[int] = None, to_timestamp: Optional[int] = None, limit: Optional[int] = None):
+            """
+            Fetch the user's messages based on optional filters (from, to, limit).
+            
+            Parameters:
+            - from_timestamp (Optional[int]): Limits results to have their timestamp after or on this timestamp.
+            - to_timestamp (Optional[int]): Limits results to have their timestamp before or on this timestamp.
+            - limit (Optional[int]): Limits the amount of results. Will use the default if above the allowed amount.
+            
+            Returns:
+            - List[Message]: A list of message objects.
+            """
+            logger.debug(f"Fetching messages for User ID: {self.user_id}")
+
+            # Construct query parameters
+            parameters = {}
+            if from_timestamp:
+                parameters['from'] = from_timestamp
+            if to_timestamp:
+                parameters['to'] = to_timestamp
+            if limit:
+                parameters['limit'] = limit
+
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'messages', parameters)
+
+            if response and 'messages' in response:
+                self.messages_data = {msg_id: self.Message(msg_id, msg_data) for msg_id, msg_data in response['messages'].items()}
+                logger.info(f"Fetched {len(self.messages_data)} messages for User ID: {self.user_id}")
+                return self.messages_data
+            else:
+                logger.warning(f"No messages data found for User ID: {self.user_id}")
+                return None
+
+        class Message:
+            """
+            A class representing an individual message.
+            """
+            def __init__(self, msg_id: int, data: Dict[str, Any]):
+                self.id = msg_id
+                self.name = data.get('name', '')
+                self.read = bool(data.get('read', 0))
+                self.seen = bool(data.get('seen', 0))
+                self.timestamp = data.get('timestamp', 0)
+                self.title = data.get('title', '')
+                self.type = data.get('type', '')
+
+            def __repr__(self):
+                return (f"Message(ID={self.id}, Name='{self.name}', Read={self.read}, Seen={self.seen}, "
+                        f"Timestamp={self.timestamp}, Title='{self.title}', Type='{self.type}')")
+
+    class Missions:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.missions_data = None
+            logger.info(f"Initialized Missions for User ID: {self.user_id}")
+
+        def fetch_missions(self):
+            """
+            Fetch the user's missions information.
+
+            Returns:
+            - Dict[str, List[Mission]]: A dictionary where each key is a mission giver (e.g., 'Duke'),
+              and the value is a list of Mission objects.
+            """
+            logger.debug(f"Fetching missions for User ID: {self.user_id}")
+            
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'missions')
+
+            if response and 'missions' in response:
+                self.missions_data = {mission_giver: [self.Mission(mission_data) for mission_data in missions]
+                                      for mission_giver, missions in response['missions'].items()}
+                logger.info(f"Fetched missions for User ID: {self.user_id}")
+                return self.missions_data
+            else:
+                logger.warning(f"No missions data found for User ID: {self.user_id}")
+                return None
+
+        class Mission:
+            """
+            A class representing an individual mission.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.status = data.get('status', 'notAccepted')
+                self.title = data.get('title', '')
+
+            def __repr__(self):
+                return f"Mission(status='{self.status}', title='{self.title}')"
+
+    class Money:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.money_data = None
+            logger.info(f"Initialized Money for User ID: {self.user_id}")
+
+        def fetch_money(self):
+            """
+            Fetch the user's money information.
+
+            Returns:
+            - MoneyData: An instance of MoneyData containing various financial details of the user.
+            """
+            logger.debug(f"Fetching money information for User ID: {self.user_id}")
+            
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'money')
+
+            if response:
+                self.money_data = self.MoneyData(response)
+                logger.info(f"Fetched money data for User ID: {self.user_id}")
+                return self.money_data
+            else:
+                logger.warning(f"No money data found for User ID: {self.user_id}")
+                return None
+
+        class MoneyData:
+            """
+            A class representing the user's financial information.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.cayman_bank = data.get('cayman_bank', 0)
+                self.city_bank = self.CityBank(data.get('city_bank', {}))
+                self.company_funds = data.get('company_funds', 0)
+                self.daily_networth = data.get('daily_networth', 0)
+                self.money_onhand = data.get('money_onhand', 0)
+                self.points = data.get('points', 0)
+                self.vault_amount = data.get('vault_amount', 0)
+                logger.debug(f"Processed MoneyData: {self}")
+
+            def __repr__(self):
+                return (f"MoneyData(cayman_bank={self.cayman_bank}, city_bank={self.city_bank}, "
+                        f"company_funds={self.company_funds}, daily_networth={self.daily_networth}, "
+                        f"money_onhand={self.money_onhand}, points={self.points}, vault_amount={self.vault_amount})")
+
+            class CityBank:
+                """
+                A class representing the user's City Bank information.
+                """
+                def __init__(self, data: Dict[str, Any]):
+                    self.amount = data.get('amount', 0)
+                    self.time_left = data.get('time_left', 0)
+
+                def __repr__(self):
+                    return f"CityBank(amount={self.amount}, time_left={self.time_left})"
+
+    class Networth:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.networth_data = None
+            logger.info(f"Initialized Networth for User ID: {self.user_id}")
+
+        def fetch_networth(self):
+            """
+            Fetch the user's live networth values.
+
+            Returns:
+            - NetworthData: An instance of NetworthData containing the user's financial assets and their corresponding values.
+            """
+            logger.debug(f"Fetching networth information for User ID: {self.user_id}")
+
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'networth')
+
+            if response:
+                self.networth_data = self.NetworthData(response.get('networth', {}))
+                logger.info(f"Fetched networth data for User ID: {self.user_id}")
+                return self.networth_data
+            else:
+                logger.warning(f"No networth data found for User ID: {self.user_id}")
+                return None
+
+        class NetworthData:
+            """
+            A class representing the user's networth values.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.auctionhouse = data.get('auctionhouse', 0)
+                self.bank = data.get('bank', 0)
+                self.bazaar = data.get('bazaar', 0)
+                self.bookie = data.get('bookie', 0)
+                self.cayman = data.get('cayman', 0)
+                self.company = data.get('company', 0)
+                self.displaycase = data.get('displaycase', 0)
+                self.enlistedcars = data.get('enlistedcars', 0)
+                self.itemmarket = data.get('itemmarket', 0)
+                self.items = data.get('items', 0)
+                self.loan = data.get('loan', 0)
+                self.parsetime = data.get('parsetime', 0.0)
+                self.pending = data.get('pending', 0)
+                self.piggybank = data.get('piggybank', 0)
+                self.points = data.get('points', 0)
+                self.properties = data.get('properties', 0)
+                self.stockmarket = data.get('stockmarket', 0)
+                self.total = data.get('total', 0)
+                self.trade = data.get('trade', 0)
+                self.unpaidfees = data.get('unpaidfees', 0)
+                self.vault = data.get('vault', 0)
+                self.wallet = data.get('wallet', 0)
+                logger.debug(f"Processed NetworthData: {self}")
+
+            def __repr__(self):
+                return (
+                    f"NetworthData(auctionhouse={self.auctionhouse}, bank={self.bank}, "
+                    f"bazaar={self.bazaar}, bookie={self.bookie}, cayman={self.cayman}, "
+                    f"company={self.company}, displaycase={self.displaycase}, enlistedcars={self.enlistedcars}, "
+                    f"itemmarket={self.itemmarket}, items={self.items}, loan={self.loan}, "
+                    f"parsetime={self.parsetime}, pending={self.pending}, piggybank={self.piggybank}, "
+                    f"points={self.points}, properties={self.properties}, stockmarket={self.stockmarket}, "
+                    f"total={self.total}, trade={self.trade}, unpaidfees={self.unpaidfees}, vault={self.vault}, "
+                    f"wallet={self.wallet})"
+                )
+
+    class NewEvents:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.events_data = None
+            logger.info(f"Initialized NewEvents for User ID: {self.user_id}")
+
+        def fetch_newevents(self):
+            """
+            Fetch the user's last 100 unread events.
+
+            Returns:
+            - NewEventsData: An instance of NewEventsData containing the user's unread events.
+            """
+            logger.debug(f"Fetching new events for User ID: {self.user_id}")
+
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'newevents')
+
+            if response:
+                self.events_data = self.NewEventsData(response)
+                logger.info(f"Fetched new events for User ID: {self.user_id}")
+                return self.events_data
+            else:
+                logger.warning(f"No new events data found for User ID: {self.user_id}")
+                return None
+
+        class NewEventsData:
+            """
+            A class representing the user's unread events.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.events = {event_id: self.Event(event_data) for event_id, event_data in data.get('events', {}).items()}
+                self.player_id = data.get('player_id', 0)
+                logger.debug(f"Processed NewEventsData: {self}")
+
+            class Event:
+                """
+                A class representing an individual event.
+                """
+                def __init__(self, data: Dict[str, Any]):
+                    self.event = data.get('event', '')
+                    self.seen = data.get('seen', 0)  # Will always be 0 for unread events
+                    self.timestamp = data.get('timestamp', 0)
+                    logger.debug(f"Processed Event: {self}")
+
+                def __repr__(self):
+                    return f"Event(event='{self.event}', seen={self.seen}, timestamp={self.timestamp})"
+
+            def __repr__(self):
+                return f"NewEventsData(events={self.events}, player_id={self.player_id})"
+
+    class NewMessages:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.messages_data = None
+            logger.info(f"Initialized NewMessages for User ID: {self.user_id}")
+
+        def fetch_newmessages(self):
+            """
+            Fetch the user's unread messages.
+
+            Returns:
+            - NewMessagesData: An instance of NewMessagesData containing the user's unread messages.
+            """
+            logger.debug(f"Fetching new messages for User ID: {self.user_id}")
+
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'newmessages')
+
+            if response:
+                self.messages_data = self.NewMessagesData(response)
+                logger.info(f"Fetched new messages for User ID: {self.user_id}")
+                return self.messages_data
+            else:
+                logger.warning(f"No new messages data found for User ID: {self.user_id}")
+                return None
+
+        class NewMessagesData:
+            """
+            A class representing the user's unread messages.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.messages = {message_id: self.Message(message_data) for message_id, message_data in data.get('messages', {}).items()}
+                self.player_id = data.get('player_id', 0)
+                logger.debug(f"Processed NewMessagesData: {self}")
+
+            class Message:
+                """
+                A class representing an individual message.
+                """
+                def __init__(self, data: Dict[str, Any]):
+                    self.ID = data.get('ID', 0)
+                    self.name = data.get('name', '')
+                    self.read = data.get('read', 0)  # Will always be 0 for unread messages
+                    self.seen = data.get('seen', 0)
+                    self.timestamp = data.get('timestamp', 0)
+                    self.title = data.get('title', '')
+                    self.type = data.get('type', '')
+                    logger.debug(f"Processed Message: {self}")
+
+                def __repr__(self):
+                    return (f"Message(ID={self.ID}, name='{self.name}', read={self.read}, "
+                            f"seen={self.seen}, timestamp={self.timestamp}, title='{self.title}', "
+                            f"type='{self.type}')")
+
+            def __repr__(self):
+                return f"NewMessagesData(messages={self.messages}, player_id={self.player_id})"
+
+    class Notifications:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.notifications_data = None
+            logger.info(f"Initialized Notifications for User ID: {self.user_id}")
+
+        def fetch_notifications(self):
+            """
+            Fetch the user's notifications count.
+
+            Returns:
+            - NotificationsData: An instance of NotificationsData containing the counts of various notifications.
+            """
+            logger.debug(f"Fetching notifications for User ID: {self.user_id}")
+
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'notifications')
+
+            if response:
+                self.notifications_data = self.NotificationsData(response)
+                logger.info(f"Fetched notifications for User ID: {self.user_id}")
+                return self.notifications_data
+            else:
+                logger.warning(f"No notifications data found for User ID: {self.user_id}")
+                return None
+
+        class NotificationsData:
+            """
+            A class representing the counts of various notifications for the user.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.awards = data.get('awards', 0)
+                self.competition = data.get('competition', 0)
+                self.events = data.get('events', 0)
+                self.messages = data.get('messages', 0)
+                logger.debug(f"Processed NotificationsData: {self}")
+
+            def __repr__(self):
+                return (f"NotificationsData(awards={self.awards}, "
+                        f"competition={self.competition}, events={self.events}, "
+                        f"messages={self.messages})")
+
+    class Perks:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.perks_data = None
+            logger.info(f"Initialized Perks for User ID: {self.user_id}")
+
+        def fetch_perks(self):
+            """
+            Fetch the user's active perks.
+
+            Returns:
+            - PerksData: An instance of PerksData containing the user's active perks.
+            """
+            logger.debug(f"Fetching perks for User ID: {self.user_id}")
+
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'perks')
+
+            if response:
+                self.perks_data = self.PerksData(response)
+                logger.info(f"Fetched perks for User ID: {self.user_id}")
+                return self.perks_data
+            else:
+                logger.warning(f"No perks data found for User ID: {self.user_id}")
+                return None
+
+        class PerksData:
+            """
+            A class representing the user's active perks.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.book_perks = data.get('book_perks', [])
+                self.education_perks = data.get('education_perks', [])
+                self.enhancer_perks = data.get('enhancer_perks', [])
+                self.faction_perks = data.get('faction_perks', [])
+                self.job_perks = data.get('job_perks', [])
+                self.merit_perks = data.get('merit_perks', [])
+                self.property_perks = data.get('property_perks', [])
+                self.stock_perks = data.get('stock_perks', [])
+                logger.debug(f"Processed PerksData: {self}")
+
+            def __repr__(self):
+                return (f"PerksData(book_perks={self.book_perks}, education_perks={self.education_perks}, "
+                        f"enhancer_perks={self.enhancer_perks}, faction_perks={self.faction_perks}, "
+                        f"job_perks={self.job_perks}, merit_perks={self.merit_perks}, "
+                        f"property_perks={self.property_perks}, stock_perks={self.stock_perks})")
+
+    class PersonalStats:
+        # TODO: Needs to be double checked ( i believe that the update now works)
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.stats_data = None
+            logger.info(f"Initialized PersonalStats for User ID: {self.user_id}")
+
+        def fetch_stats(self, timestamp: Optional[int] = None, stat: Optional[str] = None):
+            """
+            Fetch the user's personal stats.
+            
+            Args:
+            - timestamp (int, optional): The epoch timestamp to get the stats from. Older dates might return combined data.
+            - stat (str, optional): The specific stat key to retrieve data for.
+            
+            Returns:
+            - PersonalStatsData: An instance of PersonalStatsData containing the user's personal stats.
+            """
+            logger.debug(f"Fetching personal stats for User ID: {self.user_id}, Timestamp: {timestamp}, Stat: {stat}")
+            
+            # Prepare parameters for query
+            parameters = {}
+            if timestamp:
+                parameters['timestamp'] = timestamp
+            if stat:
+                parameters['stat'] = stat
+
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'personalstats', parameters)
+            # print(f"response {response}")
+            if response and isinstance(response, dict) and 'personalstats' in response:
+                # Create a new PersonalStatsData instance with the response data
+                self.stats_data = self.PersonalStatsData(response['personalstats'])
+                logger.info(f"Fetched personal stats for User ID: {self.user_id}")
+                return self.stats_data
+            else:
+                logger.warning(f"No personal stats data found for User ID: {self.user_id}")
+                return None
+
+        class PersonalStatsData:
+            """
+            A class representing the user's personal stats.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                # Personal stats fields initialization
+                self.activestreak = data.get('activestreak', 0)
+                self.alcoholused = data.get('alcoholused', 0)
+                self.argtravel = data.get('argtravel', 0)
+                self.arrestsmade = data.get('arrestsmade', 0)
+                self.attackcriticalhits = data.get('attackcriticalhits', 0)
+                self.attackdamage = data.get('attackdamage', 0)
+                self.attackhits = data.get('attackhits', 0)
+                self.attackmisses = data.get('attackmisses', 0)
+                self.attacksassisted = data.get('attacksassisted', 0)
+                self.attacksdraw = data.get('attacksdraw', 0)
+                self.attackslost = data.get('attackslost', 0)
+                self.attacksstealthed = data.get('attacksstealthed', 0)
+                self.attackswon = data.get('attackswon', 0)
+                self.attackswonabroad = data.get('attackswonabroad', 0)
+                self.auctionsells = data.get('auctionsells', 0)
+                self.auctionswon = data.get('auctionswon', 0)
+                self.awards = data.get('awards', 0)
+                self.axehits = data.get('axehits', 0)
+                self.bazaarcustomers = data.get('bazaarcustomers', 0)
+                self.bazaarprofit = data.get('bazaarprofit', 0)
+                self.bazaarsales = data.get('bazaarsales', 0)
+                self.bestactivestreak = data.get('bestactivestreak', 0)
+                self.bestdamage = data.get('bestdamage', 0)
+                self.bestkillstreak = data.get('bestkillstreak', 0)
+                self.bloodwithdrawn = data.get('bloodwithdrawn', 0)
+                self.booksread = data.get('booksread', 0)
+                self.boostersused = data.get('boostersused', 0)
+                self.bountiescollected = data.get('bountiescollected', 0)
+                self.bountiesplaced = data.get('bountiesplaced', 0)
+                self.bountiesreceived = data.get('bountiesreceived', 0)
+                self.candyused = data.get('candyused', 0)
+                self.cantaken = data.get('cantaken', 0)
+                self.cantravel = data.get('cantravel', 0)
+                self.caytravel = data.get('caytravel', 0)
+                self.chahits = data.get('chahits', 0)
+                self.chitravel = data.get('chitravel', 0)
+                self.cityfinds = data.get('cityfinds', 0)
+                self.cityitemsbought = data.get('cityitemsbought', 0)
+                self.classifiedadsplaced = data.get('classifiedadsplaced', 0)
+                self.companymailssent = data.get('companymailssent', 0)
+                self.consumablesused = data.get('consumablesused', 0)
+                self.contractscompleted = data.get('contractscompleted', 0)
+                self.counterfeiting = data.get('counterfeiting', 0)
+                self.criminaloffenses = data.get('criminaloffenses', 0)
+                self.cybercrime = data.get('cybercrime', 0)
+                self.daysbeendonator = data.get('daysbeendonator', 0)
+                self.defendslost = data.get('defendslost', 0)
+                self.defendslostabroad = data.get('defendslostabroad', 0)
+                self.defendsstalemated = data.get('defendsstalemated', 0)
+                self.defendswon = data.get('defendswon', 0)
+                self.defense = data.get('defense', 0)
+                self.dexterity = data.get('dexterity', 0)
+                self.drugsused = data.get('drugsused', 0)
+                self.dubtravel = data.get('dubtravel', 0)
+                self.dukecontractscompleted = data.get('dukecontractscompleted', 0)
+                self.dumpfinds = data.get('dumpfinds', 0)
+                self.dumpsearches = data.get('dumpsearches', 0)
+                self.eastereggs = data.get('eastereggs', 0)
+                self.eastereggsused = data.get('eastereggsused', 0)
+                self.elo = data.get('elo', 0)
+                self.endurance = data.get('endurance', 0)
+                self.energydrinkused = data.get('energydrinkused', 0)
+                self.extortion = data.get('extortion', 0)
+                self.exttaken = data.get('exttaken', 0)
+                self.factionmailssent = data.get('factionmailssent', 0)
+                self.failedbusts = data.get('failedbusts', 0)
+                self.fraud = data.get('fraud', 0)
+                self.friendmailssent = data.get('friendmailssent', 0)
+                self.grehits = data.get('grehits', 0)
+                self.h2hhits = data.get('h2hhits', 0)
+                self.hawtravel = data.get('hawtravel', 0)
+                self.heahits = data.get('heahits', 0)
+                self.highestbeaten = data.get('highestbeaten', 0)
+                self.hollowammoused = data.get('hollowammoused', 0)
+                self.hospital = data.get('hospital', 0)
+                self.illegalproduction = data.get('illegalproduction', 0)
+                self.illicitservices = data.get('illicitservices', 0)
+                self.incendiaryammoused = data.get('incendiaryammoused', 0)
+                self.intelligence = data.get('intelligence', 0)
+                self.investedprofit = data.get('investedprofit', 0)
+                self.itemsbought = data.get('itemsbought', 0)
+                self.itemsboughtabroad = data.get('itemsboughtabroad', 0)
+                self.itemsdumped = data.get('itemsdumped', 0)
+                self.itemslooted = data.get('itemslooted', 0)
+                self.itemssent = data.get('itemssent', 0)
+                self.jailed = data.get('jailed', 0)
+                self.japtravel = data.get('japtravel', 0)
+                self.jobpointsused = data.get('jobpointsused', 0)
+                self.kettaken = data.get('kettaken', 0)
+                self.killstreak = data.get('killstreak', 0)
+                self.largestmug = data.get('largestmug', 0)
+                self.lontravel = data.get('lontravel', 0)
+                self.lsdtaken = data.get('lsdtaken', 0)
+                self.machits = data.get('machits', 0)
+                self.mailssent = data.get('mailssent', 0)
+                self.manuallabor = data.get('manuallabor', 0)
+                self.medicalitemsused = data.get('medicalitemsused', 0)
+                self.meritsbought = data.get('meritsbought', 0)
+                self.mextravel = data.get('mextravel', 0)
+                self.missioncreditsearned = data.get('missioncreditsearned', 0)
+                self.missionscompleted = data.get('missionscompleted', 0)
+                self.moneyinvested = data.get('moneyinvested', 0)
+                self.moneymugged = data.get('moneymugged', 0)
+                self.nerverefills = data.get('nerverefills', 0)
+                self.networth = data.get('networth', 0)
+                self.networthauctionhouse = data.get('networthauctionhouse', 0)
+                self.networthbank = data.get('networthbank', 0)
+                self.networthbazaar = data.get('networthbazaar', 0)
+                self.networthbookie = data.get('networthbookie', 0)
+                self.networthcayman = data.get('networthcayman', 0)
+                self.networthcompany = data.get('networthcompany', 0)
+                self.networthdisplaycase = data.get('networthdisplaycase', 0)
+                self.networthenlistedcars = data.get('networthenlistedcars', 0)
+                self.networthitemmarket = data.get('networthitemmarket', 0)
+                self.networthitems = data.get('networthitems', 0)
+                self.networthloan = data.get('networthloan', 0)
+                self.networthpending = data.get('networthpending', 0)
+                self.networthpiggybank = data.get('networthpiggybank', 0)
+                self.networthpoints = data.get('networthpoints', 0)
+                self.networthproperties = data.get('networthproperties', 0)
+                self.networthstockmarket = data.get('networthstockmarket', 0)
+                self.networthunpaidfees = data.get('networthunpaidfees', 0)
+                self.networthvault = data.get('networthvault', 0)
+                self.networthwallet = data.get('networthwallet', 0)
+                self.onehitkills = data.get('onehitkills', 0)
+                self.opitaken = data.get('opitaken', 0)
+                self.organisedcrimes = data.get('organisedcrimes', 0)
+                self.overdosed = data.get('overdosed', 0)
+                self.pcptaken = data.get('pcptaken', 0)
+                self.peoplebought = data.get('peoplebought', 0)
+                self.peopleboughtspent = data.get('peopleboughtspent', 0)
+                self.peoplebusted = data.get('peoplebusted', 0)
+                self.personalsplaced = data.get('personalsplaced', 0)
+                self.piehits = data.get('piehits', 0)
+                self.piercingammoused = data.get('piercingammoused', 0)
+                self.pishits = data.get('pishits', 0)
+                self.pointsbought = data.get('pointsbought', 0)
+                self.pointssold = data.get('pointssold', 0)
+                self.racesentered = data.get('racesentered', 0)
+                self.raceswon = data.get('raceswon', 0)
+                self.racingpointsearned = data.get('racingpointsearned', 0)
+                self.racingskill = data.get('racingskill', 0)
+                self.raidhits = data.get('raidhits', 0)
+                self.rankedwarhits = data.get('rankedwarhits', 0)
+                self.rankedwarringwins = data.get('rankedwarringwins', 0)
+                self.receivedbountyvalue = data.get('receivedbountyvalue', 0)
+                self.refills = data.get('refills', 0)
+                self.rehabcost = data.get('rehabcost', 0)
+                self.rehabs = data.get('rehabs', 0)
+                self.respectforfaction = data.get('respectforfaction', 0)
+                self.retals = data.get('retals', 0)
+                self.revives = data.get('revives', 0)
+                self.reviveskill = data.get('reviveskill', 0)
+                self.revivesreceived = data.get('revivesreceived', 0)
+                self.rifhits = data.get('rifhits', 0)
+                self.roundsfired = data.get('roundsfired', 0)
+                self.shohits = data.get('shohits', 0)
+                self.shrtaken = data.get('shrtaken', 0)
+                self.slahits = data.get('slahits', 0)
+                self.smghits = data.get('smghits', 0)
+                self.soutravel = data.get('soutravel', 0)
+                self.specialammoused = data.get('specialammoused', 0)
+                self.speed = data.get('speed', 0)
+                self.spetaken = data.get('spetaken', 0)
+                self.spousemailssent = data.get('spousemailssent', 0)
+                self.statenhancersused = data.get('statenhancersused', 0)
+                self.stockfees = data.get('stockfees', 0)
+                self.stocklosses = data.get('stocklosses', 0)
+                self.stocknetprofits = data.get('stocknetprofits', 0)
+                self.stockpayouts = data.get('stockpayouts', 0)
+                self.stockprofits = data.get('stockprofits', 0)
+                self.strength = data.get('strength', 0)
+                self.switravel = data.get('switravel', 0)
+                self.territoryclears = data.get('territoryclears', 0)
+                self.territoryjoins = data.get('territoryjoins', 0)
+                self.territorytime = data.get('territorytime', 0)
+                self.theft = data.get('theft', 0)
+                self.theyrunaway = data.get('theyrunaway', 0)
+                self.tokenrefills = data.get('tokenrefills', 0)
+                self.totalbountyreward = data.get('totalbountyreward', 0)
+                self.totalbountyspent = data.get('totalbountyspent', 0)
+                self.totalstats = data.get('totalstats', 0)
+                self.totalworkingstats = data.get('totalworkingstats', 0)
+                self.tracerammoused = data.get('tracerammoused', 0)
+                self.trades = data.get('trades', 0)
+                self.trainsreceived = data.get('trainsreceived', 0)
+                self.traveltime = data.get('traveltime', 0)
+                self.traveltimes = data.get('traveltimes', 0)
+                self.unarmoredwon = data.get('unarmoredwon',0)
+                self.useractivity = data.get('useractivity', 0)	
+                self.victaken = data.get('victaken', 0)
+                self.virusescoded = data.get('virusescoded', 0)
+                self.weaponsbought = data.get('weaponsbought', 0)
+                self.xantaken = data.get('xantaken', 0)
+                self.yourunaway = data.get('yourunaway', 0)
+                logger.debug(f"Processed PersonalStatsData: {self}")
+
+            def __repr__(self):
+                # Summary of some key stats for concise logging or printing
+                return (f"PersonalStatsData(activestreak={self.activestreak}, alcoholused={self.alcoholused},"
+                        f""
+                        f"xantaken={self.xantaken}, yourunaway={self.yourunaway})")
+
+    class Profile:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.profile_data = None
+            logger.info(f"Initialized Profile for User ID: {self.user_id}")
+
+        def fetch_profile(self):
+            """
+            Fetch the user's profile information.
+            
+            Returns:
+            - ProfileData: An instance of ProfileData containing the user's profile.
+            """
+            logger.debug(f"Fetching profile for User ID: {self.user_id}")
+            
+            # Make API request
+            response = self.api.make_request('user', self.user_id, 'profile')
+            if response:
+                self.profile_data = self.ProfileData(response)
+                logger.info(f"Fetched profile for User ID: {self.user_id}")
+                return self.profile_data
+            else:
+                logger.warning(f"No profile data found for User ID: {self.user_id}")
+                return None
+
+        class ProfileData:
+            """
+            A class representing the user's profile data.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                # Basic fields
+                self.age = data.get('age', 0)
+                self.awards = data.get('awards', 0)
+                self.basicicons = self.Icons(data.get('basicicons', {}))
+                self.competition = self.Competition(data.get('competition', {}))
+                self.donator = data.get('donator', 0)
+                self.enemies = data.get('enemies', 0)
+                self.faction = self.Faction(data.get('faction', {}))
+                self.forum_posts = data.get('forum_posts', 0)
+                self.friends = data.get('friends', 0)
+                self.gender = data.get('gender', 'Unknown')
+                self.honor = data.get('honor', 0)
+                self.job = self.Job(data.get('job', {}))
+                self.karma = data.get('karma', 0)
+                self.last_action = self.LastAction(data.get('last_action', {}))
+                self.level = data.get('level', 0)
+                self.life = self.Bar(data.get('life', {}))
+                self.married = self.Married(data.get('married', {}))
+                self.name = data.get('name', 'Unknown')
+                self.player_id = data.get('player_id', None)
+                self.profile_image = data.get('profile_image', '')
+                self.property = data.get('property', '')
+                self.property_id = data.get('property_id', 0)
+                self.rank = data.get('rank', 'Unknown')
+                self.revivable = data.get('revivable', 0)
+                self.role = data.get('role', 'Unknown')
+                self.signup = data.get('signup', 'Unknown')
+                self.states = self.States(data.get('states', {}))
+                self.status = self.Status(data.get('status', {}))
+                logger.debug(f"Processed ProfileData: {self}")
+
+            def __repr__(self):
+                # Summary of some key profile fields for concise logging or printing
+                return (f"ProfileData(name={self.name}, level={self.level}, "
+                        f"faction={self.faction.faction_name}, life ={self.life.current} "
+                        f"rank={self.rank}, status={self.status.state})")
+
+            class Bar:
+                def __init__(self, data: Dict[str, Any]):
+                    self.current = data.get('current', 0)
+                    self.fulltime = data.get('fulltime', 0)
+                    self.increment = data.get('increment', 0)
+                    self.interval = data.get('interval', 0)
+                    self.maximum = data.get('maximum', 0)
+                    self.ticktime = data.get('ticktime', 0)
+
+            class Competition:
+                def __init__(self, data: Dict[str, Any]):
+                    self.attacks = data.get('attacks', 0)
+                    self.image = data.get('image', '')
+                    self.name = data.get('name', 'Unknown')
+                    self.position = data.get('position', 'Unknown')
+                    self.score = data.get('score', 0)
+                    self.status = data.get('status', 'Unknown')
+                    self.team = data.get('team', 'Unknown')
+                    self.text = data.get('text', '')
+                    self.total = data.get('total', 0)
+                    self.treats_collected_total = data.get('treats_collected_total', 0)
+                    self.votes = data.get('votes', 0)
+
+            class Faction:
+                def __init__(self, data: Dict[str, Any]):
+                    self.days_in_faction = data.get('days_in_faction', 0)
+                    self.faction_id = data.get('faction_id', 0)
+                    self.faction_name = data.get('faction_name', '')
+                    self.faction_tag = data.get('faction_tag', '')
+                    self.position = data.get('position', '')
+
+            class Icons:
+                def __init__(self, data: Dict[str, Any]):
+                    # Assuming the structure is a dictionary of icon IDs and their associated values
+                    self.icons = data
+
+            class Job:
+                def __init__(self, data: Dict[str, Any]):
+                    self.company_id = data.get('company_id', 0)
+                    self.company_name = data.get('company_name', '')
+                    self.company_type = data.get('company_type', 0)
+                    self.job = data.get('job', '')
+                    self.position = data.get('position', '')
+
+            class LastAction:
+                def __init__(self, data: Dict[str, Any]):
+                    self.relative = data.get('relative', 'Unknown')
+                    self.status = data.get('status', 'Offline')
+                    self.timestamp = data.get('timestamp', 0)
+
+            class Married:
+                def __init__(self, data: Dict[str, Any]):
+                    self.duration = data.get('duration', 0)
+                    self.spouse_id = data.get('spouse_id', 0)
+                    self.spouse_name = data.get('spouse_name', '')
+
+            class States:
+                def __init__(self, data: Dict[str, Any]):
+                    self.hospital_timestamp = data.get('hospital_timestamp', 0)
+                    self.jail_timestamp = data.get('jail_timestamp', 0)
+
+            class Status:
+                def __init__(self, data: Dict[str, Any]):
+                    self.color = data.get('color', 'Unknown')
+                    self.description = data.get('description', '')
+                    self.details = data.get('details', '')
+                    self.state = data.get('state', 'Okay')
+                    self.until = data.get('until', 0)
+
+    class Properties:
+        # TODO:make properties more accessible
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.properties_data = None
+            logger.info(f"Initialized Properties for User ID: {self.user_id}")
+
+        def fetch_properties(self):
+            """
+            Fetch the properties owned by the user and their spouse.
+            
+            Returns:
+            - PropertiesData: An instance of PropertiesData containing the user's properties.
+            """
+            logger.debug(f"Fetching properties for User ID: {self.user_id}")
+            
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'properties')
+                logger.debug(f"API response for properties: {response}")
+                
+                # Check if the response contains the 'properties' field
+                if not response or 'properties' not in response:
+                    logger.warning(f"Properties not found in response for User ID: {self.user_id}")
+                    return None
+
+                # Parse and return properties data
+                self.properties_data = self.PropertiesData(response)
+                logger.info(f"Fetched properties for User ID: {self.user_id}")
+                return self.properties_data
+
+            except Exception as e:
+                logger.error(f"Error fetching properties for User ID: {self.user_id}: {e}")
+                return None
+
+        class PropertiesData:
+            """
+            A class representing the properties owned by a player and their spouse.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                try:
+                    # The properties data contains a dictionary of property IDs as keys
+                    self.properties = {prop_id: self.Property(prop_data) for prop_id, prop_data in data.get('properties', {}).items()}
+                    logger.debug(f"Processed PropertiesData: {self}")
+                except Exception as e:
+                    logger.error(f"Error processing PropertiesData: {e}")
+
+            def __repr__(self):
+                # Summary of the number of properties for concise logging or printing
+                return f"({self.properties})"
+
+            class Property:
+                def __init__(self, data: Dict[str, Any]):
+                    try:
+                        self.owner_id = data.get('owner_id', 0)
+                        self.property_type = data.get('property_type', 0)
+                        self.property_name = data.get('property', 'Unknown')
+                        self.status = data.get('status', 'Unknown')
+                        self.happy = data.get('happy', 0)
+                        self.upkeep = data.get('upkeep', 0)
+                        self.staff_cost = data.get('staff_cost', 0)
+                        self.cost = data.get('cost', 0)
+                        self.marketprice = data.get('marketprice', 0)
+                        self.modifications = self.Modifications(data.get('modifications', {}))
+                        self.staff = self.Staff(data.get('staff', {}))
+                        self.rented = self.Rented(data.get('rented')) if data.get('rented') else None
+                        logger.debug(f"Processed Property: {self.property_name}, Owner ID: {self.owner_id}")
+                    except Exception as e:
+                        logger.error(f"Error processing Property: {e}")
+
+                class Modifications:
+                    def __init__(self, data: Dict[str, Any]):
+                        self.interior = data.get('interior', 0)
+                        self.hot_tub = data.get('hot_tub', 0)
+                        self.sauna = data.get('sauna', 0)
+                        self.pool = data.get('pool', 0)
+                        self.open_bar = data.get('open_bar', 0)
+                        self.shooting_range = data.get('shooting_range', 0)
+                        self.vault = data.get('vault', 0)
+                        self.medical_facility = data.get('medical_facility', 0)
+                        self.airstrip = data.get('airstrip', 0)
+                        self.yacht = data.get('yacht', 0)
+
+                class Rented:
+                    def __init__(self, data: Optional[Dict[str, Any]]):
+                        if data:
+                            self.cost_per_day = data.get('cost_per_day', 0)
+                            self.days_left = data.get('days_left', 0)
+                            self.total_cost = data.get('total_cost', 0)
+                            self.user_id = data.get('user_id', 0)
+                        else:
+                            self.cost_per_day = 0
+                            self.days_left = 0
+                            self.total_cost = 0
+                            self.user_id = 0
+
+                class Staff:
+                    def __init__(self, data: Dict[str, Any]):
+                        self.maid = data.get('maid', 0)
+                        self.guard = data.get('guard', 0)
+                        self.pilot = data.get('pilot', 0)
+                        self.butler = data.get('butler', 0)
+                        self.doctor = data.get('doctor', 0)
+
+    class PublicStatus:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.status_data = None
+            logger.info(f"Initialized PublicStatus for User ID: {self.user_id}")
+
+        def fetch_public_status(self):
+            """
+            Fetch the public status information of the user.
+            
+            Returns:
+            - PublicStatusData: An instance of PublicStatusData containing the user's public status.
+            """
+            logger.debug(f"Fetching public status for User ID: {self.user_id}")
+            
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'publicstatus')
+                logger.debug(f"API response for public status: {response}")
+                
+                # Check if the response contains the necessary fields
+                if not response or 'playername' not in response or 'status' not in response:
+                    logger.warning(f"Public status information not found for User ID: {self.user_id}")
+                    return None
+
+                # Parse and return public status data
+                self.status_data = self.PublicStatusData(response)
+                logger.info(f"Fetched public status for User ID: {self.user_id}")
+                return self.status_data
+
+            except Exception as e:
+                logger.error(f"Error fetching public status for User ID: {self.user_id}: {e}")
+                return None
+
+        class PublicStatusData:
+            """
+            A class representing the public status information of a user.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                try:
+                    self.baned = data.get('baned', False)  # Note the intentional spelling from the API
+                    self.playername = data.get('playername', 'Unknown')
+                    self.status = data.get('status', 'Unknown')
+                    self.user_id = data.get('userID', 0)
+                    logger.debug(f"Processed PublicStatusData: {self}")
+                except Exception as e:
+                    logger.error(f"Error processing PublicStatusData: {e}")
+
+            def __repr__(self):
+                return f"PublicStatusData(playername={self.playername}, status={self.status}, user_id={self.user_id})"
+
+    class Refills:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.refill_data = None
+            logger.info(f"Initialized Refills for User ID: {self.user_id}")
+
+        def fetch_refill_status(self):
+            """
+            Fetch the refill status information for the user.
+
+            Returns:
+            - RefillsData: An instance of RefillsData containing the user's refill status.
+            """
+            logger.debug(f"Fetching refill status for User ID: {self.user_id}")
+            
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'refills')
+                logger.debug(f"API response for refill status: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'refills' not in response:
+                    logger.warning(f"Refill status information not found for User ID: {self.user_id}")
+                    return None
+
+                # Parse and return refill data
+                self.refill_data = self.RefillsData(response['refills'])
+                logger.info(f"Fetched refill status for User ID: {self.user_id}")
+                return self.refill_data
+
+            except Exception as e:
+                logger.error(f"Error fetching refill status for User ID: {self.user_id}: {e}")
+                return None
+
+        class RefillsData:
+            """
+            A class representing the refill status of a user.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                try:
+                    self.energy_refill_used = data.get('energy_refill_used', False)
+                    self.nerve_refill_used = data.get('nerve_refill_used', False)
+                    self.special_refills_available = data.get('special_refills_available', 0)
+                    self.token_refill_used = data.get('token_refill_used', False)
+                    logger.debug(f"Processed RefillsData: {self}")
+                except Exception as e:
+                    logger.error(f"Error processing RefillsData: {e}")
+
+            def __repr__(self):
+                return (f"RefillsData(energy_refill_used={self.energy_refill_used}, "
+                        f"nerve_refill_used={self.nerve_refill_used}, "
+                        f"special_refills_available={self.special_refills_available}, "
+                        f"token_refill_used={self.token_refill_used})")
+
+    class Reports:
+        # TODO: Needs to be tested
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.reports_data = []
+            logger.info(f"Initialized Reports for User ID: {self.user_id}")
+
+        def fetch_last_reports(self):
+            """
+            Fetch the last 100 reports for the user.
+
+            Returns:
+            - List[ReportData]: A list of ReportData instances containing report details.
+            """
+            logger.debug(f"Fetching last 100 reports for User ID: {self.user_id}")
+
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'reports')
+                logger.debug(f"API response for reports: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'reports' not in response:
+                    logger.warning(f"No reports found for User ID: {self.user_id}")
+                    return []
+
+                # Parse and return reports data
+                self.reports_data = [self.ReportData(report) for report in response['reports']]
+                logger.info(f"Fetched {len(self.reports_data)} reports for User ID: {self.user_id}")
+                return self.reports_data
+
+            except Exception as e:
+                logger.error(f"Error fetching reports for User ID: {self.user_id}: {e}")
+                return []
+
+        class ReportData:
+            """
+            A class representing the details of a report.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.id = data.get('id', '')
+                self.target = data.get('target', 0)
+                self.timestamp = data.get('timestamp', 0)
+                self.type = data.get('type', '')
+                self.user_id = data.get('user_id', 0)
+                self.report = self.ReportDetails(data.get('report', {}))
+                logger.debug(f"Processed ReportData: {self}")
+
+            class ReportDetails:
+                """
+                A class representing the detailed information within a report.
+                """
+                def __init__(self, data: Dict[str, Any]):
+                    self.bounties = data.get('bounties', [])
+                    self.company_history = data.get('company_history', [])
+                    self.defense = data.get('defense', 0)
+                    self.dexterity = data.get('dexterity', 0)
+                    self.enemylist = [self.UserData(user) for user in data.get('enemylist', [])]
+                    self.faction_history = data.get('faction_history', [])
+                    self.friendlist = [self.UserData(user) for user in data.get('friendlist', [])]
+                    self.invested_amount = data.get('invested_amount', 0)
+                    self.invested_completion = data.get('invested_completion', '')
+                    self.money = data.get('money', 0)
+                    self.otherlist = data.get('otherlist', [])
+                    self.speed = data.get('speed', 0)
+                    self.strength = data.get('strength', 0)
+                    self.toplist = data.get('toplist', [])
+                    self.total_battlestats = data.get('total_battlestats', 0)
+                    self.truelevel = data.get('truelevel', 0)
+
+            def __repr__(self):
+                return (f"ReportData(id={self.id}, target={self.target}, "
+                        f"timestamp={self.timestamp}, type={self.type}, "
+                        f"user_id={self.user_id}, report={self.report})")
+
+        class UserData:
+            """
+            A class representing a friend or foe user in the report.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.name = data.get('name', '')
+                self.user_id = data.get('user_id', 0)
+                logger.debug(f"Processed UserData: {self}")
+
+            def __repr__(self):
+                return f"UserData(name={self.name}, user_id={self.user_id})"
+
+    class Revives:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.revives_data = []
+            logger.info("Initialized Revives")
+
+        def fetch_latest_revives(self, from_timestamp: Optional[int] = None, 
+                                  to_timestamp: Optional[int] = None, 
+                                  limit: Optional[int] = None):
+            """
+            Fetch the latest 100 revives involving faction members.
+
+            Parameters:
+            - from_timestamp (int): Limits results to have their timestamp after or on this timestamp.
+            - to_timestamp (int): Limits results to have their timestamp before or on this timestamp.
+            - limit (int): Limits amount of results. Amount can't be above the default amount.
+
+            Returns:
+            - List[ReviveData]: A list of ReviveData instances containing revive details.
+            """
+            logger.debug(f"Fetching latest revives with params - from: {from_timestamp}, to: {to_timestamp}, limit: {limit}")
+
+            try:
+                # Prepare query parameters
+                params = {}
+                if from_timestamp:
+                    params['from'] = from_timestamp
+                if to_timestamp:
+                    params['to'] = to_timestamp
+                if limit:
+                    params['limit'] = limit
+
+                # Make API request with user_id specified
+                response = self.api.make_request('user', self.user_id,'revives', params)
+                logger.debug(f"API response for revives: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'revives' not in response:
+                    logger.warning("No revives found.")
+                    return []
+
+                # Parse and return revives data
+                self.revives_data = [self.ReviveData(revive) for revive in response['revives']]
+                logger.info(f"Fetched {len(self.revives_data)} revives.")
+                return self.revives_data
+
+            except Exception as e:
+                logger.error(f"Error fetching revives: {e}")
+                return []
+
+        class ReviveData:
+            """
+            A class representing the details of a revive.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.timestamp = data.get('timestamp', 0)
+                self.reviver_id = data.get('reviver_id', 0)
+                self.reviver_name = data.get('reviver_name', '')
+                self.reviver_faction = data.get('reviver_faction', 0)
+                self.reviver_factionname = data.get('reviver_factionname', '')
+                self.target_id = data.get('target_id', 0)
+                self.target_name = data.get('target_name', '')
+                self.target_faction = data.get('target_faction', 0)
+                self.target_factionname = data.get('target_factionname', '')
+                self.target_hospital_reason = data.get('target_hospital_reason', '')
+                self.target_last_action = self.LastAction(data.get('target_last_action', {}))
+                self.chance = data.get('chance', 0.0)
+                self.result = data.get('result', '')
+                logger.debug(f"Processed ReviveData: {self}")
+
+            class LastAction:
+                """
+                A class representing the last action status of the revived target.
+                """
+                def __init__(self, data: Dict[str, Any]):
+                    self.status = data.get('status', '')
+                    self.timestamp = data.get('timestamp', 0)
+                    logger.debug(f"Processed LastAction: {self}")
+
+            def __repr__(self):
+                return (f"ReviveData(timestamp={self.timestamp}, reviver_id={self.reviver_id}, "
+                        f"reviver_name={self.reviver_name}, target_id={self.target_id}, "
+                        f"target_name={self.target_name}, result={self.result})")
+
+    class RevivesFull:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.revives_data = []
+            logger.info("Initialized RevivesFull")
+
+        def fetch_latest_revives_full(self, from_timestamp: Optional[int] = None, 
+                                       to_timestamp: Optional[int] = None, 
+                                       limit: Optional[int] = None):
+            """
+            Fetch the latest 1000 revives without names.
+
+            Parameters:
+            - from_timestamp (int): Limits results to have their timestamp after or on this timestamp.
+            - to_timestamp (int): Limits results to have their timestamp before or on this timestamp.
+            - limit (int): Limits amount of results. Amount can't be above the default amount.
+
+            Returns:
+            - List[ReviveFullData]: A list of ReviveFullData instances containing revive details.
+            """
+            logger.debug(f"Fetching latest revives full with params - from: {from_timestamp}, to: {to_timestamp}, limit: {limit}")
+
+            try:
+                # Prepare query parameters
+                params = {}
+                if from_timestamp:
+                    params['from'] = from_timestamp
+                if to_timestamp:
+                    params['to'] = to_timestamp
+                if limit:
+                    params['limit'] = limit
+
+                # Make API request with user_id specified
+                response = self.api.make_request('user', self.user_id, 'revivesfull', params)
+                logger.debug(f"API response for revives full: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'revives' not in response:
+                    logger.warning("No revives found.")
+                    return []
+
+                # Parse and return revives full data
+                self.revives_data = [self.ReviveFullData(revive) for revive in response['revives']]
+                logger.info(f"Fetched {len(self.revives_data)} revives full.")
+                return self.revives_data
+
+            except Exception as e:
+                logger.error(f"Error fetching revives full: {e}")
+                return []
+
+        class ReviveFullData:
+            """
+            A class representing the details of a revive without player names.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.timestamp = data.get('timestamp', 0)
+                self.reviver_id = data.get('reviver_id', 0)
+                self.reviver_faction = data.get('reviver_faction', 0)
+                self.target_id = data.get('target_id', 0)
+                self.target_faction = data.get('target_faction', 0)
+                self.target_hospital_reason = data.get('target_hospital_reason', '')
+                self.target_last_action = self.LastAction(data.get('target_last_action', {}))
+                self.chance = data.get('chance', 0.0)
+                self.result = data.get('result', '')
+                logger.debug(f"Processed ReviveFullData: {self}")
+
+            class LastAction:
+                """
+                A class representing the last action status of the revived target.
+                """
+                def __init__(self, data: Dict[str, Any]):
+                    self.status = data.get('status', '')
+                    self.timestamp = data.get('timestamp', 0)
+                    logger.debug(f"Processed LastAction: {self}")
+
+            def __repr__(self):
+                return (f"ReviveFullData(timestamp={self.timestamp}, reviver_id={self.reviver_id}, "
+                        f"target_id={self.target_id}, result={self.result})")
+
+    class Skills:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.skills_data = None
+            logger.info(f"Initialized Skills for User ID: {self.user_id}")
+
+        def fetch_skills(self):
+            """
+            Fetch the skill levels for the user.
+
+            Returns:
+            - SkillsData: An instance of SkillsData containing the user's skills.
+            """
+            logger.debug(f"Fetching skills for User ID: {self.user_id}")
+            
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'skills')
+                logger.debug(f"API response for skills: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'player_id' not in response:
+                    logger.warning(f"Skills information not found for User ID: {self.user_id}")
+                    return None
+
+                # Parse and return skills data
+                self.skills_data = self.SkillsData(response)
+                logger.info(f"Fetched skills for User ID: {self.user_id}")
+                return self.skills_data
+
+            except Exception as e:
+                logger.error(f"Error fetching skills for User ID: {self.user_id}: {e}")
+                return None
+
+        class SkillsData:
+            """
+            A class representing the skill levels of a user.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                try:
+                    self.player_id = data.get('player_id')
+                    self.bootlegging = data.get('bootlegging', '0')
+                    self.burglary = data.get('burglary', '0')
+                    self.card_skimming = data.get('card_skimming', '0')
+                    self.cracking = data.get('cracking', '0')
+                    self.disposal = data.get('disposal', '0')
+                    self.forgery = data.get('forgery', '0')
+                    self.graffiti = data.get('graffiti', '0')
+                    self.hunting = data.get('hunting', '0')
+                    self.hustling = data.get('hustling', '0')
+                    self.pickpocketing = data.get('pickpocketing', '0')
+                    self.racing = data.get('racing', '0')
+                    self.reviving = data.get('reviving', '0')
+                    self.search_for_cash = data.get('search_for_cash', '0')
+                    self.shoplifting = data.get('shoplifting', '0')
+                    logger.debug(f"Processed SkillsData: {self}")
+                except Exception as e:
+                    logger.error(f"Error processing SkillsData: {e}")
+
+            def __repr__(self):
+                return (f"SkillsData(player_id={self.player_id}, "
+                        f"bootlegging={self.bootlegging}, "
+                        f"burglary={self.burglary}, "
+                        f"card_skimming={self.card_skimming}, "
+                        f"cracking={self.cracking}, "
+                        f"disposal={self.disposal}, "
+                        f"forgery={self.forgery}, "
+                        f"graffiti={self.graffiti}, "
+                        f"hunting={self.hunting}, "
+                        f"hustling={self.hustling}, "
+                        f"pickpocketing={self.pickpocketing}, "
+                        f"racing={self.racing}, "
+                        f"reviving={self.reviving}, "
+                        f"search_for_cash={self.search_for_cash}, "
+                        f"shoplifting={self.shoplifting})")
+
+    class Stocks:
+        # TODO: neeed testing because of dev having no stock yet 
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.stock_data = None
+            logger.info(f"Initialized Stocks for User ID: {self.user_id}")
+
+        def fetch_stocks(self):
+            """
+            Fetch the stock information for the user.
+
+            Returns:
+            - StocksData: An instance of StocksData containing the user's stock information.
+            """
+            logger.debug(f"Fetching stock information for User ID: {self.user_id}")
+
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'stocks')
+                logger.debug(f"API response for stocks: {response}")
+
+                # Check if the response contains the 'stocks' key
+                if not response or 'stocks' not in response:
+                    logger.warning(f"No stock information found for User ID: {self.user_id}")
+                    return None
+
+                # Handle empty stock list
+                if not response['stocks']:
+                    logger.info(f"No stocks available for User ID: {self.user_id}")
+                    self.stock_data = self.StocksData({})
+                    return self.stock_data
+
+                # Parse and return stock data
+                self.stock_data = self.StocksData(response['stocks'])
+                logger.info(f"Fetched stock information for User ID: {self.user_id}")
+                return self.stock_data
+
+            except Exception as e:
+                logger.error(f"Error fetching stock information for User ID: {self.user_id}: {e}")
+                return None
+
+        class StocksData:
+            """
+            A class representing the stocks information of a user.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.stocks = []
+
+                if data:
+                    for stock_id, stock_info in data.items():
+                        stock = self.Stock(stock_id, stock_info)
+                        self.stocks.append(stock)
+
+                logger.debug(f"Processed StocksData: {self}")
+
+            class Stock:
+                """
+                A class representing an individual stock.
+                """
+                def __init__(self, stock_id: int, stock_info: Dict[str, Any]):
+                    self.stock_id = stock_id
+                    self.benefit = stock_info.get('benefit', {})
+                    self.dividend = stock_info.get('dividend', {})
+                    self.total_shares = stock_info.get('total_shares', 0)
+                    self.transactions = stock_info.get('transactions', {})
+
+                    logger.debug(f"Processed Stock: {self}")
+
+                def __repr__(self):
+                    return (f"Stock(stock_id={self.stock_id}, total_shares={self.total_shares}, "
+                            f"benefit={self.benefit}, dividend={self.dividend})")
+
+            def __repr__(self):
+                return f"StocksData(stocks={self.stocks})"
+
+    class Timestamp:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.current_timestamp = None
+            logger.info("Initialized Timestamp API")
+
+        def fetch_current_timestamp(self):
+            """
+            Fetch the current timestamp from the TornAPI.
+
+            Returns:
+            - int: The current epoch timestamp in seconds.
+            """
+            logger.debug("Fetching current timestamp")
+
+            try:
+                # Make API request
+                response = self.api.make_request('user',self.user_id,'timestamp')
+                logger.debug(f"API response for timestamp: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'timestamp' not in response:
+                    logger.warning("Timestamp information not found")
+                    return None
+
+                # Store the current timestamp
+                self.current_timestamp = response['timestamp']
+                logger.info(f"Fetched current timestamp: {self.current_timestamp}")
+                return self.current_timestamp
+
+            except Exception as e:
+                logger.error(f"Error fetching current timestamp: {e}")
+                return None
+
+    class Travel:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.travel_data = None
+            logger.info(f"Initialized Travel for User ID: {self.user_id}")
+
+        def fetch_travel_info(self):
+            """
+            Fetch the travel details for the user.
+
+            Returns:
+            - TravelData: An instance of TravelData containing the user's travel information.
+            """
+            logger.debug(f"Fetching travel information for User ID: {self.user_id}")
+
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'travel')
+                logger.debug(f"API response for travel information: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'travel' not in response:
+                    logger.warning(f"Travel information not found for User ID: {self.user_id}")
+                    return None
+
+                # Parse and return travel data
+                self.travel_data = self.TravelData(response['travel'])
+                logger.info(f"Fetched travel information for User ID: {self.user_id}")
+                return self.travel_data
+
+            except Exception as e:
+                logger.error(f"Error fetching travel information for User ID: {self.user_id}: {e}")
+                return None
+
+        class TravelData:
+            """
+            A class representing the travel information of a user.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                try:
+                    self.departed = data.get('departed', None)
+                    self.destination = data.get('destination', None)
+                    self.method = data.get('method', None)
+                    self.time_left = data.get('time_left', None)
+                    self.timestamp = data.get('timestamp', None)
+                    logger.debug(f"Processed TravelData: {self}")
+                except Exception as e:
+                    logger.error(f"Error processing TravelData: {e}")
+
+            def __repr__(self):
+                return (f"TravelData(departed={self.departed}, "
+                        f"destination={self.destination}, "
+                        f"method={self.method}, "
+                        f"time_left={self.time_left}, "
+                        f"timestamp={self.timestamp})")
+
+    class WeaponExp:
+        # TODO: Needs to be tested 
+        def __init__(self, api: TornAPI, user_id: Optional[int] = None):
+            self.api = api
+            self.user_id = user_id
+            self.weapon_exp_data = None
+            logger.info(f"Initialized WeaponExp for User ID: {self.user_id}")
+
+        def fetch_weapon_exp(self):
+            """
+            Fetch the weapon experience for the user.
+
+            Returns:
+            - WeaponExpData: An instance of WeaponExpData containing the user's weapon experience.
+            """
+            logger.debug(f"Fetching weapon experience for User ID: {self.user_id}")
+
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'weaponexp')
+                logger.debug(f"API response for weapon experience: {response}")
+
+                # Check if the response contains the 'weaponexp' key
+                if not response or 'weaponexp' not in response:
+                    logger.warning(f"Weapon experience information not found for User ID: {self.user_id}")
+                    return None
+
+                # Parse and return weapon experience data
+                self.weapon_exp_data = self.WeaponExpData(response['weaponexp'])
+                logger.info(f"Fetched weapon experience for User ID: {self.user_id}")
+                return self.weapon_exp_data
+
+            except Exception as e:
+                logger.error(f"Error fetching weapon experience for User ID: {self.user_id}: {e}")
+                return None
+
+        class WeaponExpData:
+            """
+            A class representing the weapon experience of a user.
+            """
+            def __init__(self, data: Dict[str, Any]):
+                self.weapon_experiences = []
+
+                if data:
+                    for item in data:
+                        weapon_exp = self.WeaponExperience(item)
+                        self.weapon_experiences.append(weapon_exp)
+
+                logger.debug(f"Processed WeaponExpData: {self}")
+
+            class WeaponExperience:
+                """
+                A class representing individual weapon experience.
+                """
+                def __init__(self, data: Dict[str, Any]):
+                    self.exp = data.get('exp', 0)
+                    self.itemID = data.get('itemID', 0)
+                    self.name = data.get('name', '')
+
+                    logger.debug(f"Processed WeaponExperience: {self}")
+
+                def __repr__(self):
+                    return (f"WeaponExperience(itemID={self.itemID}, exp={self.exp}, "
+                            f"name={self.name})")
+
+            def __repr__(self):
+                return f"WeaponExpData(weapon_experiences={self.weapon_experiences})"
+    
+    class WorkStats:
+        def __init__(self, api: TornAPI, user_id: Optional[int]):
+            self.api = api
+            self.user_id = user_id
+            self.work_stats_data = None
+            logger.info(f"Initialized WorkStats for User ID: {self.user_id}")
+
+        def fetch_work_stats(self):
+            """
+            Fetch the work stats for the user.
+
+            Returns:
+            - WorkStatsData: An instance of WorkStatsData containing the user's work stats.
+            """
+            logger.debug(f"Fetching work stats for User ID: {self.user_id}")
+
+            # Check if user_id is valid
+            if self.user_id is None:
+                logger.warning("User ID is not set.")
+                return None
+
+            try:
+                # Make API request
+                response = self.api.make_request('user', self.user_id, 'workstats')
+                logger.debug(f"API response for work stats: {response}")
+
+                # Check if the response contains the necessary fields
+                if not response or 'endurance' not in response:
+                    logger.warning(f"Work stats information not found for User ID: {self.user_id}")
+                    return None
+
+                # Parse and return work stats data
+                self.work_stats_data = self.WorkStatsData(response)
+                logger.info(f"Fetched work stats for User ID: {self.user_id}")
+                return self.work_stats_data
+
+            except Exception as e:
+                logger.error(f"Error fetching work stats for User ID: {self.user_id}: {e}")
+                return None
+
+        class WorkStatsData:
+            def __init__(self, data: Dict[str, Any]):
+                self.endurance = data.get('endurance', 0)
+                self.intelligence = data.get('intelligence', 0)
+                self.manual_labor = data.get('manual_labor', 0)
+                logger.debug(f"Processed WorkStatsData: {self}")
+
+            def __repr__(self):
+                return (f"WorkStatsData(endurance={self.endurance}, "
+                        f"intelligence={self.intelligence}, "
+                        f"manual_labor={self.manual_labor})")
+
+class Property:
+    def __init__(self, api: TornAPI, property_id: Optional[int]):
+        """
+        Initialize the Property class with the TornAPI and property_id.
+
+        Args:
+        - api: An instance of the TornAPI class.
+        - property_id: The ID of the property to fetch data for.
+        """
+        self.api = api
+        self.property_id = property_id
+
+        # Initialize the inner Property class for fetching property details
+        self.property = self.Property(self.api, self.property_id)
+
+        logger.info(f"Initialized Property for Property ID: {self.property_id}")
+
+    class Property:
+        def __init__(self, api: TornAPI, property_id: Optional[int]):
+            """
+            Initialize the inner Property class.
+
+            Args:
+            - api: An instance of the TornAPI class.
+            - property_id: The ID of the property to fetch data for.
+            """
+            self.api = api
+            self.property_id = property_id
+            self.data = None  # Data holding variable to store the fetched data
+
+            logger.info(f"Initialized Property for Property ID: {self.property_id}")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Property using TornAPI.
+
+            Returns:
+            - PropertyData: An instance of PropertyData containing the fetched data.
+            """
+            logger.debug(f"Fetching property data for Property ID: {self.property_id}")
+
+            try:
+                # Make API request for the property selection with 'property' as the first parameter
+                response = self.api.make_request('property', self.property_id, 'property')
+                logger.debug(f"API response for property selection: {response}")
+
+                # Check if response contains valid data
+                if not response or 'property' not in response:
+                    logger.warning(f"Property data not found for Property ID: {self.property_id}")
+                    return None
+
+                # Parse and store data in the data holding class
+                self.data = self.PropertyData(response['property'])
+                logger.info(f"Fetched property data for Property ID: {self.property_id}")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching property data for Property ID: {self.property_id}: {e}")
+                return None
+
+        class PropertyData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the property selection data.
+
+                Args:
+                - data: A dictionary containing the fetched property data.
+                """
+                # Parse fields from the response
+                self.happy = data.get('happy', 0)
+                self.owner_id = data.get('owner_id', 0)
+                self.property_type = data.get('property_type', 0)
+                self.rented = self.Rented(data.get('rented', {}))
+                self.staff = data.get('staff', [])
+                self.upgrades = data.get('upgrades', [])
+                self.upkeep = data.get('upkeep', 0)
+                self.users_living = data.get('users_living', 0)
+
+                logger.debug(f"Processed PropertyData: {self}")
+
+            class Rented:
+                def __init__(self, data: Dict[str, Any]):
+                    """
+                    Parse and store the rented object data.
+
+                    Args:
+                    - data: A dictionary containing the rented data.
+                    """
+                    self.cost_per_day = data.get('cost_per_day', 0)
+                    self.days_left = data.get('days_left', 0)
+                    self.total_cost = data.get('total_cost', 0)
+                    self.user_id = data.get('user_id', 0)
+
+                    logger.debug(f"Processed Rented: {self}")
+
+            def __repr__(self):
+                return (f"PropertyData(happy={self.happy}, owner_id={self.owner_id}, "
+                        f"property_type={self.property_type}, rented={self.rented}, "
+                        f"staff={self.staff}, upgrades={self.upgrades}, "
+                        f"upkeep={self.upkeep}, users_living={self.users_living})")
 
 
 
@@ -891,17 +2794,7 @@ class Sections:
         logger.info(f"Creating User object for User ID: {user_id}")
         return User(self.api, user_id)
 
-# Example usage
-if __name__ == "__main__":
-    api = TornAPI()
-    sections = Sections(api)
-
-    # Fetch user's basic info using user_id
-    user = sections.user('')  # Replace with the actual user ID or None
-    basic_info = user.basic.basic_data
-    print(basic_info)
-
-    # Close the logger
-    close_logger(logger, file_handler)
-
-    api.close()
+    def property(self, property_id: Optional[int] = None) -> Property:
+        """Return a Property object initialized with the provided property_id."""
+        logger.info(f"Creating Property object for Property ID: {property_id}")
+        return Property(self.api, property_id)
