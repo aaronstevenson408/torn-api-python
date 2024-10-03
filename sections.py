@@ -8,7 +8,7 @@ from logger import setup_logger, close_logger
 env = load_environment_variables()
 if env is None:
     raise ValueError("Failed to load environment variables.")
-logger, file_handler = setup_logger('sections', env['DEBUG_LEVEL'])
+logger, file_handler = setup_logger('Sections', env['DEBUG_LEVEL'])
 class User:
     def __init__(self, api: TornAPI, user_id: Optional[int] = None):
         self.api = api
@@ -16,9 +16,9 @@ class User:
         self.ammo = self.Ammo(self.api, self.user_id)
         self.basic = self.Basic(self.api, self.user_id)
         self.attacks = self.Attacks(self.api, self.user_id)
-        self.attacksfull = self.AttacksFull(self.api, self.user_id)
+        self.attacks_full = self.AttacksFull(self.api, self.user_id)
         self.bars = self.Bars(self.api, self.user_id)
-        self.battlestats = self.BattleStats(self.api, self.user_id)
+        self.battle_stats = self.BattleStats(self.api, self.user_id)
         self.bazaar = self.Bazaar(self.api, self.user_id)
         self.cooldowns = self.Cooldowns(self.api, self.user_id)
         self.crimes = self.Crimes(self.api, self.user_id)
@@ -87,7 +87,7 @@ class User:
         class AmmoItem:
             """Class representing an individual ammo item."""
             def __init__(self, data: Dict[str, Any]):
-                self.ammo_id = data.get('ID', 0)
+                self.ammo_id = data.get('ammoID', 0)
                 self.equipped = bool(data.get('equipped', 0))
                 self.quantity = data.get('quantity', 0)
                 self.size = data.get('size', '')
@@ -103,8 +103,7 @@ class User:
 
         def __repr__(self):
             return f"Ammo(user_id={self.user_id}, ammo_data={self.ammo_data})"
-
-
+        
     class Basic:
         def __init__(self, api: TornAPI, user_id: Optional[int]):
             self.api = api
@@ -218,10 +217,10 @@ class User:
         def __init__(self, api: TornAPI, user_id: Optional[int]):
             self.api = api
             self.user_id = user_id
-            self.attacksfull_data = []
+            self.attacks_full_data = []
             logger.info(f"Initialized AttacksFull for User ID: {self.user_id}")
 
-        def fetch_attacksfull(self, from_timestamp: Optional[int] = None, to_timestamp: Optional[int] = None, limit: Optional[int] = None):
+        def fetch_attacks_full(self, from_timestamp: Optional[int] = None, to_timestamp: Optional[int] = None, limit: Optional[int] = None):
             """Fetches the last 1000 attacks with less details and optional filtering."""
             logger.debug(f"Fetching attacksfull for User ID: {self.user_id} with filters from: {from_timestamp}, to: {to_timestamp}, limit: {limit}")
 
@@ -1847,7 +1846,7 @@ class User:
                     self.until = data.get('until', 0)
 
     class Properties:
-        # TODO:make properties more accessible
+        # Properties class manages the user's properties data.
         def __init__(self, api: TornAPI, user_id: Optional[int]):
             self.api = api
             self.user_id = user_id
@@ -1873,7 +1872,7 @@ class User:
                     logger.warning(f"Properties not found in response for User ID: {self.user_id}")
                     return None
 
-                # Parse and return properties data
+                # Parse and return properties data using the nested PropertiesData class
                 self.properties_data = self.PropertiesData(response)
                 logger.info(f"Fetched properties for User ID: {self.user_id}")
                 return self.properties_data
@@ -1884,40 +1883,74 @@ class User:
 
         class PropertiesData:
             """
-            A class representing the properties owned by a player and their spouse.
+            Represents a collection of properties owned by the user.
+            Each property has its own PropertyData object with further details.
             """
             def __init__(self, data: Dict[str, Any]):
                 try:
-                    # The properties data contains a dictionary of property IDs as keys
-                    self.properties = {prop_id: self.Property(prop_data) for prop_id, prop_data in data.get('properties', {}).items()}
-                    logger.debug(f"Processed PropertiesData: {self}")
+                    # Parse properties into a list of Property instances
+                    self.properties = [self.Property(prop_id, prop_data) for prop_id, prop_data in data.get('properties', {}).items()]
+                    logger.debug(f"Processed PropertiesData with {len(self.properties)} properties.")
                 except Exception as e:
                     logger.error(f"Error processing PropertiesData: {e}")
 
             def __repr__(self):
-                # Summary of the number of properties for concise logging or printing
-                return f"({self.properties})"
+                # Summary for concise logging
+                return f"PropertiesData with {len(self.properties)} properties"
 
             class Property:
-                def __init__(self, data: Dict[str, Any]):
-                    try:
-                        self.owner_id = data.get('owner_id', 0)
-                        self.property_type = data.get('property_type', 0)
-                        self.property_name = data.get('property', 'Unknown')
-                        self.status = data.get('status', 'Unknown')
-                        self.happy = data.get('happy', 0)
-                        self.upkeep = data.get('upkeep', 0)
-                        self.staff_cost = data.get('staff_cost', 0)
-                        self.cost = data.get('cost', 0)
-                        self.marketprice = data.get('marketprice', 0)
-                        self.modifications = self.Modifications(data.get('modifications', {}))
-                        self.staff = self.Staff(data.get('staff', {}))
-                        self.rented = self.Rented(data.get('rented')) if data.get('rented') else None
-                        logger.debug(f"Processed Property: {self.property_name}, Owner ID: {self.owner_id}")
-                    except Exception as e:
-                        logger.error(f"Error processing Property: {e}")
+                """
+                Represents a single property and its associated data.
+                Each property holds a PropertyData instance that contains its specific details.
+                """
+                def __init__(self, prop_id: str, data: Dict[str, Any]):
+                    self.id = prop_id  # Store the property ID
+                    self.property_data = self.PropertyData(
+                        owner_id=data.get('owner_id', 0),
+                        property_type=data.get('property_type', 'Unknown'),
+                        property_name=data.get('property', 'Unknown'),
+                        status=data.get('status', 'Unknown'),
+                        happy=data.get('happy', 0),
+                        upkeep=data.get('upkeep', 0),
+                        staff_cost=data.get('staff_cost', 0),
+                        cost=data.get('cost', 0),
+                        marketprice=data.get('marketprice', 0),
+                        modifications=self.Modifications(data.get('modifications', {})),
+                        staff=self.Staff(data.get('staff', {})),
+                        rented=self.Rented(data.get('rented', None)) if data.get('rented') else None
+                    )
+                    logger.debug(f"Processed Property ID: {self.id} ({self.property_data.property_name})")
+
+                def __repr__(self):
+                    return f"Property(ID: {self.id}, Name: {self.property_data.property_name})"
+
+                class PropertyData:
+                    """
+                    Contains detailed information about a specific property.
+                    """
+                    def __init__(self, owner_id: int, property_type: str, property_name: str, status: str, 
+                                happy: int, upkeep: int, staff_cost: int, cost: int, marketprice: int,
+                                modifications: 'Modifications', staff: 'Staff', rented: Optional['Rented']):
+                        self.owner_id = owner_id
+                        self.property_type = property_type
+                        self.property_name = property_name
+                        self.status = status
+                        self.happy = happy
+                        self.upkeep = upkeep
+                        self.staff_cost = staff_cost
+                        self.cost = cost
+                        self.marketprice = marketprice
+                        self.modifications = modifications
+                        self.staff = staff
+                        self.rented = rented
+
+                    def __repr__(self):
+                        return f"PropertyData(Name: {self.property_name}, Owner: {self.owner_id}, Status: {self.status})"
 
                 class Modifications:
+                    """
+                    Represents modifications available in the property.
+                    """
                     def __init__(self, data: Dict[str, Any]):
                         self.interior = data.get('interior', 0)
                         self.hot_tub = data.get('hot_tub', 0)
@@ -1931,19 +1964,19 @@ class User:
                         self.yacht = data.get('yacht', 0)
 
                 class Rented:
+                    """
+                    Represents details about the property's rental status.
+                    """
                     def __init__(self, data: Optional[Dict[str, Any]]):
-                        if data:
-                            self.cost_per_day = data.get('cost_per_day', 0)
-                            self.days_left = data.get('days_left', 0)
-                            self.total_cost = data.get('total_cost', 0)
-                            self.user_id = data.get('user_id', 0)
-                        else:
-                            self.cost_per_day = 0
-                            self.days_left = 0
-                            self.total_cost = 0
-                            self.user_id = 0
+                        self.cost_per_day = data.get('cost_per_day', 0)
+                        self.days_left = data.get('days_left', 0)
+                        self.total_cost = data.get('total_cost', 0)
+                        self.user_id = data.get('user_id', 0)
 
                 class Staff:
+                    """
+                    Represents the staff employed at the property.
+                    """
                     def __init__(self, data: Dict[str, Any]):
                         self.maid = data.get('maid', 0)
                         self.guard = data.get('guard', 0)
@@ -2798,3 +2831,8 @@ class Sections:
         """Return a Property object initialized with the provided property_id."""
         logger.info(f"Creating Property object for Property ID: {property_id}")
         return Property(self.api, property_id)
+    
+    
+    
+    
+    

@@ -1,6 +1,12 @@
 import unittest
 from unittest.mock import patch
 import time
+import sys
+import os
+import requests
+# Add the parent directory to sys.path to allow importing main_api
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from rate_limiter import RateLimiter  # Ensure you import the RateLimiter class
 
 class TestRateLimiter(unittest.TestCase):
