@@ -93,7 +93,7 @@ api.close()
 
 ## API Reference
 
-For detailed information on the available methods and classes, refer to the [Unofficial Torn API documentation](https://tornapi.tornplayground.eu/user/properties).
+For detailed information on the available methods and classes, refer to the [Unofficial Torn API documentation](https://tornapi.tornplayground.eu).
 
 ## Contributing
 
