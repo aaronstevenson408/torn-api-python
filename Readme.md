@@ -25,7 +25,7 @@ A Python wrapper for the Torn API, designed to simplify interactions with the To
 To install the TornAPI wrapper, clone the repository and install the required dependencies:
 
 ```bash
-git clone https://github.com/yourusername/tornapi-wrapper.git
+git clone https://github.com/aaronstevenson408/tornapi-wrapper.git
 cd tornapi-wrapper
 pip install -r requirements.txt
 ```
@@ -48,7 +48,7 @@ Test-Public=
 
 ## Usage
 
-To use the TornAPI wrapper, initialize the API without needing to specify your Torn API key explicitly, and use the `Sections` class to access various user-related features. Here’s a simple example:
+To use the TornAPI wrapper, initialize the API and use the `Sections` class to access various user-related features. Here’s a simple example:
 
 ```python
 from tornApi import TornAPI
