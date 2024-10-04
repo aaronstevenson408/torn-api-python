@@ -1709,6 +1709,7 @@ class User:
                         f"xantaken={self.xantaken}, yourunaway={self.yourunaway})")
 
     class Profile:
+#TODO: needs to have a test for profile data  User.Profile:
         def __init__(self, api: TornAPI, user_id: Optional[int]):
             self.api = api
             self.user_id = user_id
@@ -2092,7 +2093,7 @@ class User:
                         f"token_refill_used={self.token_refill_used})")
 
     class Reports:
-        # TODO: Needs to be tested
+        # TODO: Needs to be tested (pretty sure that this doesnt work or returns null if you arent in a faction, test data seems to look good )
         def __init__(self, api: TornAPI, user_id: Optional[int]):
             self.api = api
             self.user_id = user_id
@@ -2120,6 +2121,7 @@ class User:
 
                 # Parse and return reports data
                 self.reports_data = [self.ReportData(report) for report in response['reports']]
+                logger.debug(f"reports data: {self.reports_data}")
                 logger.info(f"Fetched {len(self.reports_data)} reports for User ID: {self.user_id}")
                 return self.reports_data
 
