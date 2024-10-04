@@ -1176,7 +1176,97 @@ class TestUser(unittest.TestCase):
                 ('result.yourunaway', 3),
                 ],
             },
-#TODO: needs to have a test for profile data  User.Profile:
+            {
+                'section_name': 'profile',  # Name of the section (e.g., 'profile')
+                'method_name': 'fetch_profile',  # Method to fetch profile data
+                'mock_response': {
+                    'age': 500,
+                    'awards': 10,
+                    'basicicons': {},
+                    'competition': {
+                        'attacks': 20,
+                        'image': '',
+                        'name': 'Competition Name',
+                        'position': '1st',
+                        'score': 100,
+                        'status': 'Active',
+                        'team': 'Team A',
+                        'text': '',
+                        'total': 200,
+                        'treats_collected_total': 500,
+                        'votes': 20
+                    },
+                    'donator': 1,
+                    'enemies': 5,
+                    'faction': {
+                        'days_in_faction': 100,
+                        'faction_id': 1234,
+                        'faction_name': 'FactionName',
+                        'faction_tag': '[TAG]',
+                        'position': 'Member'
+                    },
+                    'forum_posts': 150,
+                    'friends': 50,
+                    'gender': 'Male',
+                    'honor': 1000,
+                    'job': {
+                        'company_id': 5678,
+                        'company_name': 'CompanyName',
+                        'company_type': 3,
+                        'job': 'Manager',
+                        'position': 'Top'
+                    },
+                    'karma': 75,
+                    'last_action': {
+                        'relative': '5 minutes ago',
+                        'status': 'Online',
+                        'timestamp': 1696001234
+                    },
+                    'level': 50,
+                    'life': {
+                        'current': 1000,
+                        'fulltime': 60,
+                        'increment': 5,
+                        'interval': 10,
+                        'maximum': 1000,
+                        'ticktime': 1696001300
+                    },
+                    'married': {
+                        'duration': 300,
+                        'spouse_id': 98765,
+                        'spouse_name': 'SpouseName'
+                    },
+                    'name': 'TestUser',
+                    'player_id': 54321,
+                    'profile_image': 'https://example.com/image.jpg',
+                    'property': 'Mansion',
+                    'property_id': 78910,
+                    'rank': 'General',
+                    'revivable': 1,
+                    'role': 'Leader',
+                    'signup': '2020-01-01',
+                    'states': {
+                        'hospital_timestamp': 1696001400,
+                        'jail_timestamp': 1696001450
+                    },
+                    'status': {
+                        'color': 'green',
+                        'description': 'Healthy',
+                        'details': 'No issues',
+                        'state': 'Okay',
+                        'until': 0
+                    }
+                },  # Simulated API response data for testing purposes
+                'expected_assertions': [
+                    ('result.age', 500),
+                    ('result.name', 'TestUser'),
+                    ('result.level', 50),
+                    ('result.faction.faction_name', 'FactionName'),
+                    ('result.life.current', 1000),
+                    ('result.status.state', 'Okay'),
+                    ('result.married.spouse_name', 'SpouseName')
+                ]
+            },
             {
                 'section_name': 'properties',  # Name of the section
                 'method_name': 'fetch_properties',   # Method to fetch data for the section
