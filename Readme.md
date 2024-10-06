@@ -83,10 +83,16 @@ user_properties = user.properties.fetch_properties()
 property = sections.property(user_properties.properties[0].id)
 
 # Fetching various user data
-print(user.basic.fetch_basic())
-print(user.ammo.fetch_ammo())
-print(user.skills.fetch_skills())
+print(user.basic.fetch_data())
+print(user.ammo.fetch_data())
+print(user.skills.fetch_data())
 print(property.property.fetch_data())
+
+# alternatively you can fetch all data for a section like this:
+cityshops_example = torn.CityShops(api)
+cityshops_example.fetch_data()
+print(cityshops_example.data.shops)
+
 
 api.close()
 ```

@@ -36,3 +36,7 @@ def load_environment_variables(env_file='.env'):
     except Exception as e:
         logging.error(f"Error loading environment variables: {e}")
         return None
+    
+if __name__ == "__main__":
+    env = load_environment_variables()
+    print(env)
