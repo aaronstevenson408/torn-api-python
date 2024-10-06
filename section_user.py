@@ -669,6 +669,7 @@ class User:
                 return None
 
     class Equipment:
+        # TODO : change the way that the equipment is accessed 
         def __init__(self, api: TornAPI, user_id: Optional[int]):
             self.api = api
             self.user_id = user_id
@@ -1930,11 +1931,10 @@ class User:
                     """
                     Contains detailed information about a specific property.
                     """
-                    from typing import Optional
-
+                    #TODO: Modifications, Staff, Rented arent being found correctly , i think it should be a modifications class and Staff class and rented class that gets passed in
                     def __init__(self, owner_id: int, property_type: str, property_name: str, status: str, 
                                 happy: int, upkeep: int, staff_cost: int, cost: int, marketprice: int,
-                                modifications: 'Property.Modifications', staff: 'Property.Staff', rented: Optional['Property.Rented']):
+                                modifications: 'Modifications', staff: 'Staff', rented: Optional['Rented']):
                         self.owner_id = owner_id
                         self.property_type = property_type
                         self.property_name = property_name

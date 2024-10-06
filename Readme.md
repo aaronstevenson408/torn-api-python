@@ -77,6 +77,7 @@ from sections import Sections
 api = TornAPI()
 sections = Sections(api)
 user = sections.user('')  # Replace with a valid user ID
+torn = sections.torn(id = "101")
 
 # Fetching user properties and displaying data
 user_properties = user.properties.fetch_properties()

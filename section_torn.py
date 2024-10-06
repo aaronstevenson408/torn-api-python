@@ -33,6 +33,8 @@ class Torn:
         self.gyms = self.Gyms(self.api, self.id)
         self.honors = self.Honors(self.api, self.id)
         self.itemdetails = self.ItemDetails(self.api, self.id)
+        self.items = self.Items(self.api, self.id)
+        self.itemstats = self.ItemStats(self.api, self.id)
         # Initialize other sections here...
 
         logger.info("Initialized Torn class")
@@ -366,7 +368,7 @@ class Torn:
                     logger.warning("Companies data not found in the response")
                     return None
 
-                self.data = self.CompaniesData(response['companies'])
+                self.data = self.CompaniesData(response['companies'], id_to_use)
                 logger.info("Fetched companies data successfully")
                 return self.data
 
@@ -375,21 +377,34 @@ class Torn:
                 return None
 
         class CompaniesData:
-            def __init__(self, data: Dict[str, Any]):
+            def __init__(self, data: Dict[str, Any], id: Optional[int] = None):
                 """
                 Parse and store the companies data.
 
                 Args:
                 - data: A dictionary containing the fetched companies data.
+                - id: Optional; The ID of a specific company if provided.
                 """
                 self.companies = {company_id: self.Company(company_data) for company_id, company_data in data.items()}
+                self.id = id
                 logger.debug(f"Processed CompaniesData: {len(self.companies)} companies")
 
             def __repr__(self):
                 return f"CompaniesData(companies_count={len(self.companies)})"
 
             def __getitem__(self, company_id):
+                if isinstance(company_id, int):
+                    return self.companies.get(str(company_id))
                 return self.companies.get(company_id)
+
+            def __iter__(self):
+                return iter(self.companies.values())
+
+            @property
+            def company(self):
+                if self.id is not None:
+                    return self.companies.get(str(self.id))
+                return None
 
             class Company:
                 def __init__(self, data: Dict[str, Any]):
@@ -469,6 +484,7 @@ class Torn:
                             self.cost = data.get('cost', 0)
 
     class Competition:
+        #TODO : handle the error when the competition is not found
         def __init__(self, api: TornAPI):
             self.api = api
             self.data = None
@@ -761,7 +777,7 @@ class Torn:
             - HonorsData: An instance of HonorsData containing the fetched data.
             """
             id_to_use = honor_id if honor_id is not None else self.id
-            logger.debug(f"Fetching honors data{'for honor ID: ' + str(id_to_use) if id_to_use else ''}")
+            logger.debug(f"Fetching honors data{' for honor ID: ' + str(id_to_use) if id_to_use else ''}")
 
             try:
                 response = self.api.make_request('torn', id_to_use, 'honors')
@@ -788,9 +804,14 @@ class Torn:
                 UNCOMMON = "Uncommon"
                 VERY_COMMON = "Very Common"
                 VERY_RARE = "Very Rare"
+                NULL = "Null"  # Add NULL option
 
             def __init__(self, data: Dict[str, Any]):
-                self.honors = {honor_id: self.Honor(honor_data) for honor_id, honor_data in data.items()}
+                if isinstance(data, dict):
+                    self.honors = {honor_id: self.Honor(honor_data) for honor_id, honor_data in data.items()}
+                else:
+                    logger.error("Invalid data format for honors")
+                    self.honors = {}
 
             def __repr__(self):
                 return f"HonorsData(honors_count={len(self.honors)})"
@@ -804,7 +825,16 @@ class Torn:
                     self.description = data.get('description', '')
                     self.equipped = data.get('equipped', '')
                     self.name = data.get('name', '')
-                    self.rarity = Torn.Honors.HonorsData.Rarity(data.get('rarity', ''))
+                    
+                    # Corrected rarity handling
+                    rarity_value = data.get('rarity', '')
+                    try:
+                        # Use the value to match against the enum
+                        self.rarity = Torn.Honors.HonorsData.Rarity(rarity_value)
+                    except ValueError:
+                        logger.info(f"Invalid rarity value '{rarity_value}' for honor '{self.name}', defaulting to 'Null'")
+                        self.rarity = Torn.Honors.HonorsData.Rarity.NULL
+                    
                     self.type = data.get('type', 0)
 
                 def __repr__(self):
@@ -827,7 +857,10 @@ class Torn:
             Returns:
             - ItemData: An instance of ItemData containing the fetched data.
             """
+            
+            logger.info("Fetching item details data for item ID: %s", self.id)
             id_to_use = item_id if item_id is not None else self.id
+            logger.info("Item ID to use: %s", id_to_use)
             if id_to_use is None:
                 logger.error("No item ID provided for fetching item details")
                 return None
@@ -891,4 +924,157 @@ class Torn:
                     def __repr__(self):
                         return f"Bonus(bonus={self.bonus}, value={self.value})"
 
-    # ... (other sections will follow)
+    class Items:
+        def __init__(self, api: TornAPI, id: Optional[int] = None):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info("Initialized Items for Torn section")
+
+        def fetch_data(self, item_id: Optional[int] = None):
+            """
+            Fetch data for the Items using TornAPI.
+
+            Args:
+            - item_id: Optional; The ID of a specific item to fetch data for. If not provided, uses the default ID.
+
+            Returns:
+            - ItemsData: An instance of ItemsData containing the fetched data.
+            """
+            id_to_use = item_id if item_id is not None else self.id
+            logger.debug(f"Fetching items data{' for item ID: ' + str(id_to_use) if id_to_use else ''}")
+
+            try:
+                response = self.api.make_request('torn', id_to_use, 'items')
+                logger.debug(f"API response for items: {response}")
+
+                if not response or 'items' not in response:
+                    logger.warning("Items data not found in the response")
+                    return None
+
+                self.data = self.ItemsData(response['items'])
+                logger.info("Fetched items data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching items data: {e}")
+                return None
+
+        class ItemsData:
+            def __init__(self, data: Dict[str, Any]):
+                self.items = {item_id: self.Item(item_data) for item_id, item_data in data.items()}
+                logger.debug(f"Processed ItemsData: {len(self.items)} items")
+
+            def __repr__(self):
+                return f"ItemsData(items_count={len(self.items)})"
+
+            def __getitem__(self, item_id):
+                return self.items.get(item_id)
+
+            class Item:
+                def __init__(self, data: Dict[str, Any]):
+                    self.buy_price = data.get('buy_price', 0)
+                    self.circulation = data.get('circulation', 0)
+                    self.coverage = self.Coverage(data.get('coverage', {}))
+                    self.description = data.get('description', '')
+                    self.effect = data.get('effect', '')
+                    self.image = data.get('image', '')
+                    self.market_value = data.get('market_value', 0)
+                    self.name = data.get('name', '')
+                    self.requirement = data.get('requirement', '')
+                    self.sell_price = data.get('sell_price', 0)
+                    self.type = data.get('type', '')
+                    self.weapon_type = data.get('weapon_type', '')
+
+                def __repr__(self):
+                    return f"Item(name={self.name}, type={self.type})"
+
+                class Coverage:
+                    def __init__(self, data: Dict[str, Any]):
+                        self.arm_coverage = data.get('Arm Coverage', 0.0)
+                        self.chest_coverage = data.get('Chest Coverage', 0.0)
+                        self.foot_coverage = data.get('Foot Coverage', 0.0)
+                        self.full_body_coverage = data.get('Full Body Coverage', 0.0)
+                        self.groin_coverage = data.get('Groin Coverage', 0.0)
+                        self.hand_coverage = data.get('Hand Coverage', 0.0)
+                        self.head_coverage = data.get('Head Coverage', 0.0)
+                        self.heart_coverage = data.get('Heart Coverage', 0.0)
+                        self.leg_coverage = data.get('Leg Coverage', 0.0)
+                        self.stomach_coverage = data.get('Stomach Coverage', 0.0)
+                        self.throat_coverage = data.get('Throat Coverage', 0.0)
+
+    class ItemStats:
+        def __init__(self, api: TornAPI, id: Optional[int] = None):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info("Initialized ItemStats for Torn section")
+
+        def fetch_data(self, item_id: Optional[int] = None):
+            """
+            Fetch data for the ItemStats using TornAPI.
+
+            Args:
+            - item_id: Optional; The ID of the item to fetch stats for. If not provided, uses the ID set during initialization.
+
+            Returns:
+            - ItemStatsData: An instance of ItemStatsData containing the fetched data.
+            """
+            id_to_use = item_id if item_id is not None else self.id
+            logger.debug(f"Fetching item stats data for item ID: {id_to_use}")
+
+            if id_to_use is None:
+                logger.error("No item ID provided for fetching item stats")
+                return None
+
+            try:
+                response = self.api.make_request('torn', id_to_use, 'itemstats')
+                logger.debug(f"API response for item stats: {response}")
+
+                if not response or 'itemstats' not in response:
+                    logger.warning("Item stats data not found in the response")
+                    return None
+
+                self.data = self.ItemStatsData(response['itemstats'])
+                logger.info("Fetched item stats data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching item stats data: {e}")
+                return None
+
+        class ItemStatsData:
+            def __init__(self, data: Dict[str, Any]):
+                self.ID = data.get('ID', 0)
+                self.market_price = data.get('market_price', 0)
+                self.name = data.get('name', '')
+                self.stats = self.Stats(data.get('stats', {}))
+                self.type = data.get('type', '')
+                self.UID = data.get('UID', 0)
+
+            def __repr__(self):
+                return f"ItemStatsData(name={self.name}, type={self.type})"
+
+            class Stats:
+                def __init__(self, data: Dict[str, Any]):
+                    self.critical_hits = data.get('critical_hits', 0)
+                    self.damage = data.get('damage', 0)
+                    self.damage_mitigated = float(data.get('damage_mitigated', 0.0))
+                    self.damage_taken = float(data.get('damage_taken', 0.0))
+                    self.finishing_hits = data.get('finishing_hits', 0)
+                    self.first_faction_owner = data.get('first_faction_owner', 0)
+                    self.first_owner = data.get('first_owner', 0)
+                    self.highest_damage = data.get('highest_damage', 0)
+                    self.hits = data.get('hits', 0)
+                    self.hits_received = float(data.get('hits_received', 0.0))
+                    self.misses = data.get('misses', 0)
+                    self.most_damage_mitigated = float(data.get('most_damage_mitigated', 0.0))
+                    self.most_damage_taken = float(data.get('most_damage_taken', 0.0))
+                    self.reloads = data.get('reloads', 0)
+                    self.respect_earned = float(data.get('respect_earned', 0.0))
+                    self.rounds_fired = data.get('rounds_fired', 0)
+                    self.time_created = datetime.fromtimestamp(data.get('time_created', 0))
+
+                def __repr__(self):
+                    return (f"Stats(damage={self.damage}, critical_hits={self.critical_hits}, "
+                            f"respect_earned={self.respect_earned})")
