@@ -2241,7 +2241,7 @@ class Torn:
 
                 def __repr__(self):
                     return f"Price(start={self.start}, end={self.end}, high={self.high}, low={self.low}, change={self.change}, change_percentage={self.change_percentage})"
-    
+# TODO check if this to the end  is correct
     class Territory:
         def __init__(self, api: TornAPI):
             self.api = api

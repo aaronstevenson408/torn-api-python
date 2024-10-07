@@ -1,7 +1,7 @@
 import time
 from env_loader import load_environment_variables
 from logger import setup_logger
-
+# TODO: Implement wait time if limit is exceeded or fix the rate limiter
 class RateLimiter:
     def __init__(self, limit=100, timeframe=60):
         """
