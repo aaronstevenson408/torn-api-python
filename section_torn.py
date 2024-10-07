@@ -35,7 +35,24 @@ class Torn:
         self.itemdetails = self.ItemDetails(self.api, self.id)
         self.items = self.Items(self.api, self.id)
         self.itemstats = self.ItemStats(self.api, self.id)
-        # Initialize other sections here...
+        self.logcategories = self.LogCategories(self.api)
+        self.logtypes = self.LogTypes(self.api)
+        self.lookup = self.Lookup(self.api) 
+        self.medals = self.Medals(self.api)
+        self.organisedcrimes = self.OrganisedCrimes(self.api, self.id)
+        self.pawnshop = self.Pawnshop(self.api)
+        self.properties = self.Properties(self.api)
+        self.rackets = self.Rackets(self.api)
+        self.raids = self.Raids(self.api)
+        self.rankedwars = self.RankedWars(self.api)
+        self.rankedwarreport = self.RankedWarReport(self.api, self.id)
+        self.stats = self.Stats(self.api)
+        self.stocks = self.Stocks(self.api, self.id)
+        self.territory = self.Territory(self.api)
+        self.territorynames = self.TerritoryNames(self.api)
+        self.territorywarreport = self.TerritoryWarReport(self.api, self.id)
+        self.territorywars = self.TerritoryWars(self.api)
+        self.timestamp = self.Timestamp()
 
         logger.info("Initialized Torn class")
 
@@ -1056,6 +1073,7 @@ class Torn:
                 return f"ItemStatsData(name={self.name}, type={self.type})"
 
             class Stats:
+                
                 def __init__(self, data: Dict[str, Any]):
                     self.critical_hits = data.get('critical_hits', 0)
                     self.damage = data.get('damage', 0)
@@ -1078,3 +1096,1432 @@ class Torn:
                 def __repr__(self):
                     return (f"Stats(damage={self.damage}, critical_hits={self.critical_hits}, "
                             f"respect_earned={self.respect_earned})")
+
+    class LogCategories:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized LogCategories for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the LogCategories using TornAPI.
+
+            Returns:
+            - LogCategoriesData: An instance of LogCategoriesData containing the fetched data.
+            """
+            logger.debug("Fetching log categories data")
+
+            try:
+                response = self.api.make_request('torn', '', 'logcategories')
+                logger.debug(f"API response for log categories: {response}")
+
+                if not response or 'logcategories' not in response:
+                    logger.warning("Log categories data not found in the response")
+                    return None
+
+                self.data = self.LogCategoriesData(response['logcategories'])
+                logger.info("Fetched log categories data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching log categories data: {e}")
+                return None
+
+        class LogCategoriesData:
+            def __init__(self, data: Dict[str, Any]):
+                self.categories = {category_id: category_name for category_id, category_name in data.items() }
+                logger.debug(f"Processed LogCategoriesData: {len(self.categories)} categories")
+
+            def __repr__(self):
+                return f"LogCategoriesData(categories_count={len(self.categories)})"
+
+            def __getitem__(self, category_id):
+                return self.categories.get(category_id)
+
+    class LogTypes:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized LogTypes for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the LogTypes using TornAPI.
+
+            Returns:
+            - LogTypesData: An instance of LogTypesData containing the fetched data.
+            """
+            logger.debug("Fetching log types data")
+
+            try:
+                response = self.api.make_request('torn', '', 'logtypes')
+                logger.debug(f"API response for log types: {response}")
+
+                if not response or 'logtypes' not in response:
+                    logger.warning("Log types data not found in the response")
+                    return None
+
+                self.data = self.LogTypesData(response['logtypes'])
+                logger.info("Fetched log types data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching log types data: {e}")
+                return None
+
+        class LogTypesData:
+            def __init__(self, data: Dict[str, Any]):
+                self.types = {type_id: type_name for type_id, type_name in data.items()}
+                logger.debug(f"Processed LogTypesData: {len(self.types)} types")
+
+            def __repr__(self):
+                return f"LogTypesData(types_count={len(self.types)})"
+
+            def __getitem__(self, type_id):
+                return self.types.get(type_id)
+
+    class Lookup:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized Lookup for Torn section")
+
+        def fetch_data(self, section: str):
+            """
+            Fetch data for the Lookup using TornAPI.
+
+            Args:
+            - section: The section to look up selections for.
+
+            Returns:
+            - LookupData: An instance of LookupData containing the fetched data.
+            """
+            logger.debug(f"Fetching lookup data for section: {section}")
+
+            try:
+                response = self.api.make_request('torn', '', 'lookup', selections=section)
+                logger.debug(f"API response for lookup: {response}")
+
+                if not response or 'selections' not in response:
+                    logger.warning("Lookup data not found in the response")
+                    return None
+
+                self.data = self.LookupData(response['selections'])
+                logger.info(f"Fetched lookup data successfully for section: {section}")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching lookup data: {e}")
+                return None
+
+        class LookupData:
+            def __init__(self, data: List[str]):
+                self.selections = data
+                logger.debug(f"Processed LookupData: {len(self.selections)} selections")
+
+            def __repr__(self):
+                return f"LookupData(selections_count={len(self.selections)})"
+
+            def __iter__(self):
+                return iter(self.selections)
+
+            def __getitem__(self, index):
+                return self.selections[index]            
+                        
+    class Medals:
+        def __init__(self, api: TornAPI, id: Optional[int] = None):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info("Initialized Medals for Torn section")
+
+        def fetch_data(self, medal_id: Optional[int] = None):
+            """
+            Fetch data for the Medals using TornAPI.
+
+            Args:
+            - medal_id: Optional; The ID of a specific medal to fetch data for. If not provided, uses the default ID.
+
+            Returns:
+            - MedalsData: An instance of MedalsData containing the fetched data.
+            """
+            id_to_use = medal_id if medal_id is not None else self.id
+            logger.debug(f"Fetching medals data{'for medal ID: ' + str(id_to_use) if id_to_use else ''}")
+
+            try:
+                response = self.api.make_request('torn', id_to_use, 'medals')
+                logger.debug(f"API response for medals: {response}")
+
+                if not response or 'medals' not in response:
+                    logger.warning("Medals data not found in the response")
+                    return None
+
+                self.data = self.MedalsData(response['medals'])
+                logger.info("Fetched medals data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching medals data: {e}")
+                return None
+
+        class MedalsData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the medals data.
+
+                Args:
+                - data: A dictionary containing the fetched medals data.
+                """
+                self.medals = {medal_id: self.Medal(medal_data) for medal_id, medal_data in data.items()}
+                logger.debug(f"Processed MedalsData: {len(self.medals)} medals")
+
+            def __repr__(self):
+                return f"MedalsData(medals_count={len(self.medals)})"
+
+            def __getitem__(self, medal_id):
+                return self.medals.get(medal_id)
+
+            class Medal:
+                class Rarity(Enum):
+                    UNKNOWN = "Unknown Rarity"
+                    VERY_COMMON = "Very Common"
+                    COMMON = "Common"
+                    UNCOMMON = "Uncommon"
+                    RARE = "Rare"
+                    VERY_RARE = "Very Rare"
+                    EXTREMELY_RARE = "Extremely Rare"
+                    LIMITED = "Limited"
+
+                def __init__(self, data: Dict[str, Any]):
+                    self.circulation = data.get('circulation', 0)
+                    self.description = data.get('description', '')
+                    self.equipped = data.get('equipped', '')
+                    self.name = data.get('name', '')
+                    self.type = data.get('type', '')
+                    self.rarity = self.determine_rarity(data.get('rarity'), self.circulation)
+
+                def determine_rarity(self, rarity_str: Optional[str], circulation: int) -> Rarity:
+                    """
+                    Determine the rarity of the medal based on the rarity string and circulation.
+                    If rarity is not provided or unknown, estimate it based on circulation.
+                    """
+
+                    try:
+                        return self.Rarity(rarity_str)
+                    except ValueError:
+                        logger.info(f"Unrecognized rarity '{rarity_str}' for medal '{self.name}'. Estimating based on circulation.")
+
+                def __repr__(self):
+                    return f"Medal(name={self.name}, rarity={self.rarity.value}, circulation={self.circulation})"
+            
+    class OrganisedCrimes:
+        def __init__(self, api: TornAPI, id: Optional[int] = None):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info("Initialized OrganisedCrimes for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the OrganisedCrimes using TornAPI.
+
+            Returns:
+            - OrganisedCrimesData: An instance of OrganisedCrimesData containing the fetched data.
+            """
+            logger.debug("Fetching organised crimes data")
+
+            try:
+                response = self.api.make_request('torn', self.id, 'organisedcrimes')
+                logger.debug(f"API response for organised crimes: {response}")
+
+                if not response or 'organisedcrimes' not in response:
+                    logger.warning("Organised crimes data not found in the response")
+                    return None
+
+                self.data = self.OrganisedCrimesData(response['organisedcrimes'])
+                logger.info("Fetched organised crimes data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching organised crimes data: {e}")
+                return None
+
+        class OrganisedCrimesData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the organised crimes data.
+
+                Args:
+                - data: A dictionary containing the fetched organised crimes data.
+                """
+                self.crimes = {crime_id: self.OrganisedCrime(crime_data) for crime_id, crime_data in data.items()}
+                logger.debug(f"Processed OrganisedCrimesData: {len(self.crimes)} crimes")
+
+            def __repr__(self):
+                return f"OrganisedCrimesData(crimes_count={len(self.crimes)})"
+
+            def __getitem__(self, crime_id):
+                return self.crimes.get(crime_id)
+
+            class OrganisedCrime:
+                def __init__(self, data: Dict[str, Any]):
+                    self.max_cash = data.get('max_cash', 0)
+                    self.max_respect = data.get('max_respect', 0)
+                    self.members = data.get('members', 0)
+                    self.min_cash = data.get('min_cash', 0)
+                    self.min_respect = data.get('min_respect', 0)
+                    self.name = data.get('name', '')
+                    self.time = data.get('time', 0)
+
+                def __repr__(self):
+                    return f"OrganisedCrime(name={self.name}, members={self.members}, time={self.time})"
+    
+    class Pawnshop:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized Pawnshop for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Pawnshop using TornAPI.
+
+            Returns:
+            - PawnshopData: An instance of PawnshopData containing the fetched data.
+            """
+            logger.debug("Fetching pawnshop data")
+
+            try:
+                response = self.api.make_request('torn', '', 'pawnshop')
+                logger.debug(f"API response for pawnshop: {response}")
+
+                if not response or 'pawnshop' not in response:
+                    logger.warning("Pawnshop data not found in the response")
+                    return None
+
+                self.data = self.PawnshopData(response['pawnshop'])
+                logger.info("Fetched pawnshop data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching pawnshop data: {e}")
+                return None
+
+        class PawnshopData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the pawnshop data.
+
+                Args:
+                - data: A dictionary containing the fetched pawnshop data.
+                """
+                self.donatorpack_value = data.get('donatorpack_value', 0)
+                self.points_value = data.get('points_value', 0)
+                logger.debug(f"Processed PawnshopData: donatorpack_value={self.donatorpack_value}, points_value={self.points_value}")
+
+            def __repr__(self):
+                return f"PawnshopData(donatorpack_value={self.donatorpack_value}, points_value={self.points_value})"
+
+    class PokerTables:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized PokerTables for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the PokerTables using TornAPI.
+
+            Returns:
+            - Dict[str, PokerTableData]: A dictionary of PokerTableData instances, keyed by table ID.
+            """
+            logger.debug("Fetching poker tables data")
+
+            try:
+                response = self.api.make_request('torn', '', 'pokertables')
+                logger.debug(f"API response for poker tables: {response}")
+
+                if not response or 'pokertables' not in response:
+                    logger.warning("Poker tables data not found in the response")
+                    return None
+
+                self.data = {table_id: self.PokerTableData(table_data) for table_id, table_data in response['pokertables'].items()}
+                logger.info("Fetched poker tables data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching poker tables data: {e}")
+                return None
+
+        class PokerTableData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the poker table data.
+
+                Args:
+                - data: A dictionary containing the fetched poker table data.
+                """
+                self.big_blind = data.get('big_blind', 0)
+                self.current_players = data.get('current_players', 0)
+                self.maximum_players = data.get('maximum_players', 0)
+                self.name = data.get('name', '')
+                self.small_blind = data.get('small_blind', 0)
+                self.speed = data.get('speed', 0)
+                logger.debug(f"Processed PokerTableData: {self}")
+
+            def __repr__(self):
+                return f"PokerTableData(name='{self.name}', current_players={self.current_players}, maximum_players={self.maximum_players}, small_blind={self.small_blind}, big_blind={self.big_blind}, speed={self.speed})"
+   
+    class Properties:
+        def __init__(self, api: TornAPI, id: Optional[int] = None):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info("Initialized Properties for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Properties using TornAPI.
+
+            Returns:
+            - Dict[str, PropertyData]: A dictionary of PropertyData instances, keyed by property ID.
+            """
+            logger.debug("Fetching properties data")
+
+            try:
+                response = self.api.make_request('torn', self.id, 'properties')
+                logger.debug(f"API response for properties: {response}")
+
+                if not response or 'properties' not in response:
+                    logger.warning("Properties data not found in the response")
+                    return None
+
+                self.data = {prop_id: self.PropertyData(prop_data) for prop_id, prop_data in response['properties'].items()}
+                logger.info("Fetched properties data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching properties data: {e}")
+                return None
+
+        class PropertyData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the property data.
+
+                Args:
+                - data: A dictionary containing the fetched property data.
+                """
+                self.cost = data.get('cost', '')
+                self.happy = data.get('happy', 0)
+                self.name = data.get('name', '')
+                self.staff_available = data.get('staff_available', [])
+                self.upgrades_available = data.get('upgrades_available', [])
+                logger.debug(f"Processed PropertyData: {self}")
+
+            def __repr__(self):
+                return f"PropertyData(name='{self.name}', cost='{self.cost}', happy={self.happy}, staff_available={self.staff_available}, upgrades_available={self.upgrades_available})"
+
+    class Rackets:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized Rackets for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Rackets using TornAPI.
+
+            Returns:
+            - Dict[str, RacketData]: A dictionary of RacketData instances, keyed by territory.
+            """
+            logger.debug("Fetching rackets data")
+
+            try:
+                response = self.api.make_request('torn', '', 'rackets')
+                logger.debug(f"API response for rackets: {response}")
+
+                if not response or 'rackets' not in response:
+                    logger.warning("Rackets data not found in the response")
+                    return None
+
+                self.data = {territory: self.RacketData(racket_data) for territory, racket_data in response['rackets'].items()}
+                logger.info("Fetched rackets data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching rackets data: {e}")
+                return None
+
+        class RacketData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the racket data.
+
+                Args:
+                - data: A dictionary containing the fetched racket data.
+                """
+                self.changed = data.get('changed', 0)
+                self.created = data.get('created', 0)
+                self.faction = data.get('faction', 0)
+                self.level = data.get('level', 0)
+                self.name = data.get('name', '')
+                self.reward = data.get('reward', '')
+                logger.debug(f"Processed RacketData: {self}")
+
+            def __repr__(self):
+                return f"RacketData(name='{self.name}', faction={self.faction}, level={self.level}, reward='{self.reward}', changed={self.changed}, created={self.created})"
+
+    class RaidReport:
+        def __init__(self, api: TornAPI, id: Optional[int] = None):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info(f"Initialized RaidReport for Torn section with ID: {self.id}")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Raid Report using TornAPI.
+
+            Returns:
+            - RaidReportData: An instance of RaidReportData containing the fetched data.
+            """
+            if self.id is None:
+                logger.error("Raid report ID is required but not provided")
+                return None
+
+            logger.debug(f"Fetching raid report data for ID: {self.id}")
+
+            try:
+                response = self.api.make_request('torn', self.id, 'raidreport')
+                logger.debug(f"API response for raid report: {response}")
+
+                if not response or 'raidreport' not in response:
+                    logger.warning("Raid report data not found in the response")
+                    return None
+
+                self.data = self.RaidReportData(response['raidreport'])
+                logger.info(f"Fetched raid report data successfully for ID: {self.id}")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching raid report data: {e}")
+                return None
+
+        class RaidReportData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the raid report data.
+
+                Args:
+                - data: A dictionary containing the fetched raid report data.
+                """
+                self.factions = self.Factions(data.get('factions', {}))
+                self.war = self.RaidWar(data.get('war', {}))
+                logger.debug(f"Processed RaidReportData: {self}")
+
+            def __repr__(self):
+                return f"RaidReportData(factions={self.factions}, war={self.war})"
+
+            class Factions:
+                def __init__(self, data: Dict[str, Any]):
+                    self.factions = {faction_id: self.Faction(faction_data) for faction_id, faction_data in data.items()}
+
+                def __repr__(self):
+                    return f"Factions({len(self.factions)} factions)"
+
+                class Faction:
+                    def __init__(self, data: Dict[str, Any]):
+                        self.attacks = data.get('attacks', 0)
+                        self.members = self.Members(data.get('members', {}))
+                        self.name = data.get('name', '')
+                        self.score = data.get('score', 0)
+                        self.type = data.get('type', '')
+
+                    def __repr__(self):
+                        return f"Faction(name='{self.name}', attacks={self.attacks}, score={self.score}, type='{self.type}')"
+
+                    class Members:
+                        def __init__(self, data: Dict[str, Any]):
+                            self.members = {user_id: self.User(user_data) for user_id, user_data in data.items()}
+
+                        def __repr__(self):
+                            return f"Members({len(self.members)} members)"
+
+                        class User:
+                            def __init__(self, data: Dict[str, Any]):
+                                self.attacks = data.get('attacks', 0)
+                                self.damage = data.get('damage', 0.0)
+                                self.faction_id = data.get('faction_id', 0)
+                                self.level = data.get('level', 0)
+                                self.name = data.get('name', '')
+
+                            def __repr__(self):
+                                return f"User(name='{self.name}', attacks={self.attacks}, damage={self.damage}, level={self.level})"
+
+            class RaidWar:
+                def __init__(self, data: Dict[str, Any]):
+                    self.end = data.get('end', 0)
+                    self.start = data.get('start', 0)
+
+                def __repr__(self):
+                    return f"RaidWar(start={self.start}, end={self.end})"
+
+    class Raids:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized Raids for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for ongoing raids using TornAPI.
+
+            Returns:
+            - RaidsData: An instance of RaidsData containing the fetched data.
+            """
+            logger.debug("Fetching raids data")
+
+            try:
+                response = self.api.make_request('torn', '', 'raids')
+                logger.debug(f"API response for raids: {response}")
+
+                if not response or 'raids' not in response:
+                    logger.warning("Raids data not found in the response")
+                    return None
+
+                self.data = self.RaidsData(response['raids'])
+                logger.info("Fetched raids data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching raids data: {e}")
+                return None
+
+        class RaidsData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the raids data.
+
+                Args:
+                - data: A dictionary containing the fetched raids data.
+                """
+                self.raids = {raid_id: self.Raid(raid_data) for raid_id, raid_data in data.items()}
+                logger.debug(f"Processed RaidsData: {len(self.raids)} raids")
+
+            def __repr__(self):
+                return f"RaidsData(raids_count={len(self.raids)})"
+
+            def __getitem__(self, raid_id):
+                return self.raids.get(raid_id)
+
+            class Raid:
+                def __init__(self, data: Dict[str, Any]):
+                    self.assaulting_faction = data.get('assaulting_faction', 0)
+                    self.assaulting_score = data.get('assaulting_score', 0.0)
+                    self.defending_faction = data.get('defending_faction', 0)
+                    self.defending_score = data.get('defending_score', 0.0)
+                    self.started = data.get('started', 0)
+
+                def __repr__(self):
+                    return f"Raid(assaulting_faction={self.assaulting_faction}, defending_faction={self.defending_faction}, started={self.started})"
+  
+    class RankedWarReport:
+        def __init__(self, api: TornAPI, id: int):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info(f"Initialized RankedWarReport for Torn section with ID: {self.id}")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Ranked War Report using TornAPI.
+
+            Returns:
+            - RankedWarReportData: An instance of RankedWarReportData containing the fetched data.
+            """
+            if self.id is None:
+                logger.error("Ranked war report ID is required but not provided")
+                return None
+
+            logger.debug(f"Fetching ranked war report data for ID: {self.id}")
+
+            try:
+                response = self.api.make_request('torn', self.id, 'rankedwarreport')
+                logger.debug(f"API response for ranked war report: {response}")
+
+                if not response or 'rankedwarreport' not in response:
+                    logger.warning("Ranked war report data not found in the response")
+                    return None
+
+                self.data = self.RankedWarReportData(response['rankedwarreport'])
+                logger.info(f"Fetched ranked war report data successfully for ID: {self.id}")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching ranked war report data: {e}")
+                return None
+
+        class RankedWarReportData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the ranked war report data.
+
+                Args:
+                - data: A dictionary containing the fetched ranked war report data.
+                """
+                self.factions = {faction_id: self.Faction(faction_data) for faction_id, faction_data in data.get('factions', {}).items()}
+                self.war = self.War(data.get('war', {}))
+                logger.debug(f"Processed RankedWarReportData: {self}")
+
+            def __repr__(self):
+                return f"RankedWarReportData(factions={self.factions}, war={self.war})"
+
+            class Faction:
+                def __init__(self, data: Dict[str, Any]):
+                    self.attacks = data.get('attacks', 0)
+                    self.members = {user_id: self.User(user_data) for user_id, user_data in data.get('members', {}).items()}
+                    self.name = data.get('name', '')
+                    self.rank_after = data.get('rank_after', '')
+                    self.rank_before = data.get('rank_before', '')
+                    self.rewards = self.Rewards(data.get('rewards', {}))
+                    self.score = data.get('score', 0)
+                    logger.debug(f"Processed Faction: {self}")
+
+                def __repr__(self):
+                    return f"Faction(name='{self.name}', score={self.score})"
+
+                class User:
+                    def __init__(self, data: Dict[str, Any]):
+                        self.attacks = data.get('attacks', 0)
+                        self.faction_id = data.get('faction_id', 0)
+                        self.level = data.get('level', 0)
+                        self.name = data.get('name', '')
+                        self.score = data.get('score', 0.0)
+                        logger.debug(f"Processed User: {self}")
+
+                    def __repr__(self):
+                        return f"User(name='{self.name}', score={self.score})"
+
+                class Rewards:
+                    def __init__(self, data: Dict[str, Any]):
+                        self.items = {item_id: self.Item(item_data) for item_id, item_data in data.get('items', {}).items()}
+                        self.points = data.get('points', 0)
+                        self.respect = data.get('respect', 0)
+                        logger.debug(f"Processed Rewards: {self}")
+
+                    def __repr__(self):
+                        return f"Rewards(points={self.points}, respect={self.respect})"
+
+                    class Item:
+                        def __init__(self, data: Dict[str, Any]):
+                            self.name = data.get('name', '')
+                            self.quantity = data.get('quantity', 0)
+                            logger.debug(f"Processed Item: {self}")
+
+                        def __repr__(self):
+                            return f"Item(name='{self.name}', quantity={self.quantity})"
+
+            class War:
+                def __init__(self, data: Dict[str, Any]):
+                    self.end = data.get('end', 0)
+                    self.forfeit = data.get('forfeit', 0)
+                    self.start = data.get('start', 0)
+                    self.winner = data.get('winner', 0)
+                    logger.debug(f"Processed War: {self}")
+
+                def __repr__(self):
+                    return f"War(start={self.start}, end={self.end}, winner={self.winner})"
+
+    class RankedWars:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized RankedWars for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the RankedWars using TornAPI.
+
+            Returns:
+            - Dict[str, RankedWar]: A dictionary of RankedWar instances, keyed by war ID.
+            """
+            logger.debug("Fetching ranked wars data")
+
+            try:
+                response = self.api.make_request('torn', '', 'rankedwars')
+                logger.debug(f"API response for ranked wars: {response}")
+
+                if not response or 'rankedwars' not in response:
+                    logger.warning("Ranked wars data not found in the response")
+                    return None
+
+                self.data = {war_id: self.RankedWar(war_data) for war_id, war_data in response['rankedwars'].items()}
+                logger.info("Fetched ranked wars data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching ranked wars data: {e}")
+                return None
+
+        class RankedWar:
+            def __init__(self, data: Dict[str, Any]):
+                self.factions = {faction_id: self.Faction(faction_data) for faction_id, faction_data in data.get('factions', {}).items()}
+                self.war = self.War(data.get('war', {}))
+                logger.debug(f"Processed RankedWar: {self}")
+
+            def __repr__(self):
+                return f"RankedWar(factions={list(self.factions.keys())}, war={self.war})"
+
+            class Faction:
+                def __init__(self, data: Dict[str, Any]):
+                    self.chain = data.get('chain', 0)
+                    self.name = data.get('name', '')
+                    self.score = data.get('score', 0)
+                    logger.debug(f"Processed Faction: {self}")
+
+                def __repr__(self):
+                    return f"Faction(name='{self.name}', score={self.score}, chain={self.chain})"
+
+            class War:
+                def __init__(self, data: Dict[str, Any]):
+                    self.end = data.get('end', 0)
+                    self.start = data.get('start', 0)
+                    self.target = data.get('target', 0)
+                    self.winner = data.get('winner', 0)
+                    logger.debug(f"Processed War: {self}")
+
+                def __repr__(self):
+                    return f"War(start={self.start}, end={self.end}, target={self.target}, winner={self.winner})"
+    
+    class RockPaperScissors:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized RockPaperScissors for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the RockPaperScissors using TornAPI.
+
+            Returns:
+            - List[RockPaperScissorsData]: A list of RockPaperScissorsData instances.
+            """
+            logger.debug("Fetching rock paper scissors data")
+
+            try:
+                response = self.api.make_request('torn', '', 'rockpaperscissors')
+                logger.debug(f"API response for rock paper scissors: {response}")
+
+                if not response or 'rockpaperscissors' not in response:
+                    logger.warning("Rock paper scissors data not found in the response")
+                    return None
+
+                self.data = [self.RockPaperScissorsData(rps_data) for rps_data in response['rockpaperscissors']]
+                logger.info("Fetched rock paper scissors data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching rock paper scissors data: {e}")
+                return None
+
+        class RockPaperScissorsData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the rock paper scissors data.
+
+                Args:
+                - data: A dictionary containing the fetched rock paper scissors data.
+                """
+                self.count = data.get('count', 0)
+                self.type = data.get('type', '')
+                logger.debug(f"Processed RockPaperScissorsData: {self}")
+
+            def __repr__(self):
+                return f"RockPaperScissorsData(count={self.count}, type='{self.type}')"
+    
+    class SearchForCash:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized SearchForCash for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the SearchForCash using TornAPI.
+
+            Returns:
+            - Dict[str, SearchForCashSubcrimeData]: A dictionary of SearchForCashSubcrimeData instances, keyed by subcrime name.
+            """
+            logger.debug("Fetching search for cash data")
+
+            try:
+                response = self.api.make_request('torn', '', 'searchforcash')
+                logger.debug(f"API response for search for cash: {response}")
+
+                if not response or 'searchforcash' not in response:
+                    logger.warning("Search for cash data not found in the response")
+                    return None
+
+                self.data = {subcrime_name: self.SearchForCashSubcrimeData(subcrime_data) for subcrime_name, subcrime_data in response['searchforcash'].items()}
+                logger.info("Fetched search for cash data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching search for cash data: {e}")
+                return None
+
+        class SearchForCashSubcrimeData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the search for cash subcrime data.
+
+                Args:
+                - data: A dictionary containing the fetched search for cash subcrime data.
+                """
+                self.percentage = data.get('percentage', 0.0)
+                self.title = data.get('title', '')
+                logger.debug(f"Processed SearchForCashSubcrimeData: {self}")
+
+            def __repr__(self):
+                return f"SearchForCashSubcrimeData(percentage={self.percentage}, title='{self.title}')"
+    
+    class Stats:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized Stats for Torn section")
+
+        def fetch_data(self, timestamp: Optional[int] = None):
+            """
+            Fetch data for the Stats using TornAPI.
+
+            Args:
+            - timestamp: Optional; Specify which date (in epoch seconds) to get the stats from.
+
+            Returns:
+            - StatsData: An instance of StatsData containing the fetched data.
+            """
+            logger.debug("Fetching stats data")
+
+            params = {}
+            if timestamp:
+                params['timestamp'] = timestamp
+
+            try:
+                response = self.api.make_request('torn', '', 'stats', params=params)
+                logger.debug(f"API response for stats: {response}")
+
+                if not response or 'stats' not in response:
+                    logger.warning("Stats data not found in the response")
+                    return None
+
+                self.data = self.StatsData(response['stats'])
+                logger.info("Fetched stats data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching stats data: {e}")
+                return None
+
+        class StatsData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the stats data.
+
+                Args:
+                - data: A dictionary containing the fetched stats data.
+                """
+                self.communication_articlereads = data.get('communication_articlereads', 0)
+                self.communication_articles = data.get('communication_articles', 0)
+                self.communication_articleviews = data.get('communication_articleviews', 0)
+                self.communication_chats = data.get('communication_chats', 0)
+                self.communication_events = data.get('communication_events', 0)
+                self.communication_forumposts = data.get('communication_forumposts', 0)
+                self.communication_messages = data.get('communication_messages', 0)
+                self.communication_totalevents = data.get('communication_totalevents', 0)
+                self.communication_totalmessages = data.get('communication_totalmessages', 0)
+                self.crimes = data.get('crimes', 0)
+                self.crimes_today = data.get('crimes_today', 0)
+                self.events = data.get('events', 0)
+                self.forums_dislikes = data.get('forums_dislikes', 0)
+                self.forums_likes = data.get('forums_likes', 0)
+                self.forums_posts = data.get('forums_posts', 0)
+                self.forums_threads = data.get('forums_threads', 0)
+                self.gym_trains = data.get('gym_trains', 0)
+                self.items = data.get('items', 0)
+                self.jailed = data.get('jailed', 0)
+                self.job_army = data.get('job_army', 0)
+                self.job_casino = data.get('job_casino', 0)
+                self.job_company = data.get('job_company', 0)
+                self.job_education = data.get('job_education', 0)
+                self.job_grocer = data.get('job_grocer', 0)
+                self.job_law = data.get('job_law', 0)
+                self.job_medical = data.get('job_medical', 0)
+                self.job_none = data.get('job_none', 0)
+                self.money_citybank = data.get('money_citybank', 0)
+                self.money_onhand = data.get('money_onhand', 0)
+                self.points_averagecost = data.get('points_averagecost', 0)
+                self.points_bought = data.get('points_bought', 0)
+                self.points_market = data.get('points_market', 0)
+                self.points_total = data.get('points_total', 0)
+                self.timestamp = data.get('timestamp', 0)
+                self.total_attacks_criticalhits = data.get('total_attacks_criticalhits', 0)
+                self.total_attacks_hits = data.get('total_attacks_hits', 0)
+                self.total_attacks_lost = data.get('total_attacks_lost', 0)
+                self.total_attacks_misses = data.get('total_attacks_misses', 0)
+                self.total_attacks_moneymugged = data.get('total_attacks_moneymugged', 0)
+                self.total_attacks_respectgained = data.get('total_attacks_respectgained', 0)
+                self.total_attacks_roundsfired = data.get('total_attacks_roundsfired', 0)
+                self.total_attacks_runaway = data.get('total_attacks_runaway', 0)
+                self.total_attacks_stalemated = data.get('total_attacks_stalemated', 0)
+                self.total_attacks_stealthed = data.get('total_attacks_stealthed', 0)
+                self.total_attacks_won = data.get('total_attacks_won', 0)
+                self.total_bounty_placed = data.get('total_bounty_placed', 0)
+                self.total_bounty_rewards = data.get('total_bounty_rewards', 0)
+                self.total_classifiedads_placed = data.get('total_classifiedads_placed', 0)
+                self.total_company_trains = data.get('total_company_trains', 0)
+                self.total_drugs_cannabis = data.get('total_drugs_cannabis', 0)
+                self.total_drugs_ecstacy = data.get('total_drugs_ecstacy', 0)
+                self.total_drugs_ketamine = data.get('total_drugs_ketamine', 0)
+                self.total_drugs_lsd = data.get('total_drugs_lsd', 0)
+                self.total_drugs_opium = data.get('total_drugs_opium', 0)
+                self.total_drugs_overdosed = data.get('total_drugs_overdosed', 0)
+                self.total_drugs_pcp = data.get('total_drugs_pcp', 0)
+                self.total_drugs_shrooms = data.get('total_drugs_shrooms', 0)
+                self.total_drugs_speed = data.get('total_drugs_speed', 0)
+                self.total_drugs_used = data.get('total_drugs_used', 0)
+                self.total_drugs_vicodin = data.get('total_drugs_vicodin', 0)
+                self.total_drugs_xanax = data.get('total_drugs_xanax', 0)
+                self.total_hospital_medicalitemsused = data.get('total_hospital_medicalitemsused', 0)
+                self.total_hospital_revived = data.get('total_hospital_revived', 0)
+                self.total_hospital_trips = data.get('total_hospital_trips', 0)
+                self.total_items_auctionswon = data.get('total_items_auctionswon', 0)
+                self.total_items_bazaarbought = data.get('total_items_bazaarbought', 0)
+                self.total_items_bazaarincome = data.get('total_items_bazaarincome', 0)
+                self.total_items_cityfinds = data.get('total_items_cityfinds', 0)
+                self.total_items_dumped = data.get('total_items_dumped', 0)
+                self.total_items_dumpfinds = data.get('total_items_dumpfinds', 0)
+                self.total_items_marketbought = data.get('total_items_marketbought', 0)
+                self.total_items_sent = data.get('total_items_sent', 0)
+                self.total_jail_bailcosts = data.get('total_jail_bailcosts', 0)
+                self.total_jail_bailed = data.get('total_jail_bailed', 0)
+                self.total_jail_busted = data.get('total_jail_busted', 0)
+                self.total_jail_busts = data.get('total_jail_busts', 0)
+                self.total_jail_jailed = data.get('total_jail_jailed', 0)
+                self.total_mails_sent = data.get('total_mails_sent', 0)
+                self.total_mails_sent_company = data.get('total_mails_sent_company', 0)
+                self.total_mails_sent_faction = data.get('total_mails_sent_faction', 0)
+                self.total_mails_sent_friends = data.get('total_mails_sent_friends', 0)
+                self.total_mails_sent_spouse = data.get('total_mails_sent_spouse', 0)
+                self.total_merits_bought = data.get('total_merits_bought', 0)
+                self.total_points_boughttotal = data.get('total_points_boughttotal', 0)
+                self.total_refills_bought = data.get('total_refills_bought', 0)
+                self.total_statenhancers_used = data.get('total_statenhancers_used', 0)
+                self.total_trades = data.get('total_trades', 0)
+                self.total_travel_all = data.get('total_travel_all', 0)
+                self.total_travel_argentina = data.get('total_travel_argentina', 0)
+                self.total_travel_canada = data.get('total_travel_canada', 0)
+                self.total_travel_caymanislands = data.get('total_travel_caymanislands', 0)
+                self.total_travel_china = data.get('total_travel_china', 0)
+                self.total_travel_dubai = data.get('total_travel_dubai', 0)
+                self.total_travel_hawaii = data.get('total_travel_hawaii', 0)
+                self.total_travel_japan = data.get('total_travel_japan', 0)
+                self.total_travel_mexico = data.get('total_travel_mexico', 0)
+                self.total_travel_southafrica = data.get('total_travel_southafrica', 0)
+                self.total_travel_switzerland = data.get('total_travel_switzerland', 0)
+                self.total_travel_unitedkingdom = data.get('total_travel_unitedkingdom', 0)
+                self.total_users_logins = data.get('total_users_logins', 0)
+                self.total_users_playtime = data.get('total_users_playtime', 0)
+                self.users_daily = data.get('users_daily', 0)
+                self.users_enby = data.get('users_enby', 0)
+                self.users_female = data.get('users_female', 0)
+                self.users_male = data.get('users_male', 0)
+                self.users_marriedcouples = data.get('users_marriedcouples', 0)
+                self.users_total = data.get('users_total', 0)
+                self.wars_raid = data.get('wars_raid', 0)
+                self.wars_ranked = data.get('wars_ranked', 0)
+                self.wars_territory = data.get('wars_territory', 0)
+                logger.debug(f"Processed StatsData: {self}")
+
+            def __repr__(self):
+                return f"StatsData(timestamp={self.timestamp}, users_total={self.users_total})"
+    
+    class Stocks:
+        def __init__(self, api: TornAPI, id: Optional[int] = None):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info("Initialized Stocks for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Stocks using TornAPI.
+
+            Returns:
+            - Dict[str, Stock]: A dictionary of Stock instances, keyed by stock ID.
+            """
+            logger.debug("Fetching stocks data")
+
+            try:
+                response = self.api.make_request('torn', self.id, 'stocks')
+                logger.debug(f"API response for stocks: {response}")
+
+                if not response or 'stocks' not in response:
+                    logger.warning("Stocks data not found in the response")
+                    return None
+
+                self.data = {stock_id: self.Stock(stock_data) for stock_id, stock_data in response['stocks'].items()}
+                logger.info("Fetched stocks data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching stocks data: {e}")
+                return None
+
+        class Stock:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the stock data.
+
+                Args:
+                - data: A dictionary containing the fetched stock data.
+                """
+                self.acronym = data.get('acronym', '')
+                self.all_time = self.Price(data.get('all_time', {}))
+                self.benefit = self.Benefit(data.get('benefit', {}))
+                self.current_price = data.get('current_price', 0.0)
+                self.history = [self.History(history_data) for history_data in data.get('history', [])]
+                self.investors = data.get('investors', 0)
+                self.last_day = self.Price(data.get('last_day', {}))
+                self.last_hour = self.Price(data.get('last_hour', {}))
+                self.last_month = self.Price(data.get('last_month', {}))
+                self.last_week = self.Price(data.get('last_week', {}))
+                self.last_year = self.Price(data.get('last_year', {}))
+                self.market_cap = data.get('market_cap', 0)
+                self.name = data.get('name', '')
+                self.stock_id = data.get('stock_id', 0)
+                self.total_shares = data.get('total_shares', 0)
+                logger.debug(f"Processed Stock: {self}")
+
+            def __repr__(self):
+                return f"Stock(name='{self.name}', acronym='{self.acronym}', current_price={self.current_price})"
+
+            class Benefit:
+                def __init__(self, data: Dict[str, Any]):
+                    self.description = data.get('description', '')
+                    self.frequency = data.get('frequency', 0)
+                    self.requirement = data.get('requirement', 0)
+                    self.type = data.get('type', '')
+                    logger.debug(f"Processed Benefit: {self}")
+
+                def __repr__(self):
+                    return f"Benefit(type='{self.type}', description='{self.description}')"
+
+            class History:
+                def __init__(self, data: Dict[str, Any]):
+                    self.change = data.get('change', 0.0)
+                    self.price = data.get('price', 0.0)
+                    self.timestamp = data.get('timestamp', 0)
+                    logger.debug(f"Processed History: {self}")
+
+                def __repr__(self):
+                    return f"History(price={self.price}, change={self.change}, timestamp={self.timestamp})"
+
+            class Price:
+                def __init__(self, data: Dict[str, Any]):
+                    self.change = data.get('change', 0.0)
+                    self.change_percentage = data.get('change_percentage', 0.0)
+                    self.end = data.get('end', 0.0)
+                    self.high = data.get('high', 0.0)
+                    self.low = data.get('low', 0.0)
+                    self.start = data.get('start', 0.0)
+                    logger.debug(f"Processed Price: {self}")
+
+                def __repr__(self):
+                    return f"Price(start={self.start}, end={self.end}, high={self.high}, low={self.low}, change={self.change}, change_percentage={self.change_percentage})"
+    
+    class Territory:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized Territory for Torn section")
+
+        def fetch_data(self, territory_names: List[str]):
+            """
+            Fetch data for the specified territories using TornAPI.
+
+            Args:
+            - territory_names (List[str]): A list of territory names to fetch data for.
+
+            Returns:
+            - Dict[str, Any]: A dictionary containing the fetched territory data.
+            """
+            logger.debug("Fetching territory data")
+
+            if len(territory_names) > 50:
+                logger.error("Cannot fetch data for more than 50 territories at a time")
+                return None
+
+            try:
+                territory_ids = ','.join(territory_names)
+                response = self.api.make_request('torn', territory_ids, 'territory')
+                logger.debug(f"API response for territory: {response}")
+
+                if not response or 'territory' not in response:
+                    logger.warning("Territory data not found in the response")
+                    return None
+
+                self.data = response['territory']
+                logger.info("Fetched territory data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching territory data: {e}")
+                return None
+
+        class Racket:
+            def __init__(self, data: Dict[str, Any]):
+                self.changed = data.get('changed', 0)
+                self.created = data.get('created', 0)
+                self.level = data.get('level', 0)
+                self.name = data.get('name', '')
+                self.reward = data.get('reward', '')
+                logger.debug(f"Processed Racket: {self}")
+
+            def __repr__(self):
+                return f"Racket(name='{self.name}', level={self.level}, reward='{self.reward}')"
+
+        class TerritoryWar:
+            def __init__(self, data: Dict[str, Any]):
+                self.assaulting_faction = data.get('assaulting_faction', 0)
+                self.defending_faction = data.get('defending_faction', 0)
+                self.ends = data.get('ends', 0)
+                self.required_score = data.get('required_score', 0)
+                self.score = data.get('score', 0)
+                self.started = data.get('started', 0)
+                self.territory_war_id = data.get('territory_war_id', 0)
+                logger.debug(f"Processed TerritoryWar: {self}")
+
+            def __repr__(self):
+                return f"TerritoryWar(assaulting_faction={self.assaulting_faction}, defending_faction={self.defending_faction}, ends={self.ends}, required_score={self.required_score}, score={self.score}, started={self.started}, territory_war_id={self.territory_war_id})"
+    
+    class TerritoryNames:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized TerritoryNames for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the TerritoryNames using TornAPI.
+
+            Returns:
+            - List[str]: A list of territory names.
+            """
+            logger.debug("Fetching territory names data")
+
+            try:
+                response = self.api.make_request('torn', '', 'territorynames')
+                logger.debug(f"API response for territory names: {response}")
+
+                if not response or 'territoryNames' not in response:
+                    logger.warning("Territory names data not found in the response")
+                    return None
+
+                self.data = response['territoryNames']
+                logger.info("Fetched territory names data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching territory names data: {e}")
+                return None
+
+        def __repr__(self):
+            return f"TerritoryNames(data={self.data})"
+
+    class TerritoryWarReport:
+        def __init__(self, api: TornAPI, id: int):
+            self.api = api
+            self.id = id
+            self.data = None
+            logger.info(f"Initialized TerritoryWarReport for Torn section with ID: {self.id}")
+
+        def fetch_data(self):
+            """
+            Fetch data for the Territory War Report using TornAPI.
+
+            Returns:
+            - TerritoryWarReportData: An instance of TerritoryWarReportData containing the fetched data.
+            """
+            if self.id is None:
+                logger.error("Territory war report ID is required but not provided")
+                return None
+
+            logger.debug(f"Fetching territory war report data for ID: {self.id}")
+
+            try:
+                response = self.api.make_request('torn', self.id, 'territorywarreport')
+                logger.debug(f"API response for territory war report: {response}")
+
+                if not response or 'territorywarreport' not in response:
+                    logger.warning("Territory war report data not found in the response")
+                    return None
+
+                self.data = self.TerritoryWarReportData(response['territorywarreport'])
+                logger.info(f"Fetched territory war report data successfully for ID: {self.id}")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching territory war report data: {e}")
+                return None
+
+        class TerritoryWarReportData:
+            def __init__(self, data: Dict[str, Any]):
+                """
+                Parse and store the territory war report data.
+
+                Args:
+                - data: A dictionary containing the fetched territory war report data.
+                """
+                self.factions = {faction_id: self.Faction(faction_data) for faction_id, faction_data in data.get('factions', {}).items()}
+                self.territory = self.Territory(data.get('territory', {}))
+                self.war = self.War(data.get('war', {}))
+                logger.debug(f"Processed TerritoryWarReportData: {self}")
+
+            def __repr__(self):
+                return f"TerritoryWarReportData(factions={self.factions}, territory={self.territory}, war={self.war})"
+
+            class Faction:
+                def __init__(self, data: Dict[str, Any]):
+                    self.clears = data.get('clears', 0)
+                    self.joins = data.get('joins', 0)
+                    self.members = {user_id: self.User(user_data) for user_id, user_data in data.get('members', {}).items()}
+                    self.name = data.get('name', '')
+                    self.score = data.get('score', 0)
+                    self.type = data.get('type', '')
+                    logger.debug(f"Processed Faction: {self}")
+
+                def __repr__(self):
+                    return f"Faction(name='{self.name}', score={self.score}, type='{self.type}')"
+
+                class User:
+                    def __init__(self, data: Dict[str, Any]):
+                        self.clears = data.get('clears', 0.0)
+                        self.faction_id = data.get('faction_id', 0)
+                        self.joins = data.get('joins', 0.0)
+                        self.level = data.get('level', 0)
+                        self.name = data.get('name', '')
+                        self.points = data.get('points', 0)
+                        logger.debug(f"Processed User: {self}")
+
+                    def __repr__(self):
+                        return f"User(name='{self.name}', points={self.points})"
+
+            class Territory:
+                def __init__(self, data: Dict[str, Any]):
+                    self.name = data.get('name', '')
+                    logger.debug(f"Processed Territory: {self}")
+
+                def __repr__(self):
+                    return f"Territory(name='{self.name}')"
+
+            class War:
+                def __init__(self, data: Dict[str, Any]):
+                    self.end = data.get('end', 0)
+                    self.result = data.get('result', '')
+                    self.start = data.get('start', 0)
+                    self.winner = data.get('winner', 0)
+                    logger.debug(f"Processed War: {self}")
+
+                def __repr__(self):
+                    return f"War(start={self.start}, end={self.end}, result='{self.result}', winner={self.winner})"
+
+                    def __init__(self, data: Dict[str, Any]):
+                        self.assaulting_faction = data.get('assaulting_faction', 0)
+                        self.defending_faction = data.get('defending_faction', 0)
+                        self.ends = data.get('ends', 0)
+                        self.required_score = data.get('required_score', 0)
+                        self.score = data.get('score', 0)
+                        self.started = data.get('started', 0)
+                        self.territory_war_id = data.get('territory_war_id', 0)
+                        logger.debug(f"Processed TerritoryWar: {self}")
+
+                    def __repr__(self):
+                        return (f"TerritoryWar(assaulting_faction={self.assaulting_faction}, "
+                                f"defending_faction={self.defending_faction}, ends={self.ends}, "
+                                f"required_score={self.required_score}, score={self.score}, "
+                                f"started={self.started}, territory_war_id={self.territory_war_id})")
+        
+    class TerritoryWars:
+        def __init__(self, api: TornAPI):
+            self.api = api
+            self.data = None
+            logger.info("Initialized TerritoryWars for Torn section")
+
+        def fetch_data(self):
+            """
+            Fetch data for the TerritoryWars using TornAPI.
+
+            Returns:
+            - Dict[str, TerritoryWar]: A dictionary of TerritoryWar instances, keyed by territory.
+            """
+            logger.debug("Fetching territory wars data")
+
+            try:
+                response = self.api.make_request('torn', '', 'territorywars')
+                logger.debug(f"API response for territory wars: {response}")
+
+                if not response or 'territorywars' not in response:
+                    logger.warning("Territory wars data not found in the response")
+                    return None
+
+                self.data = {territory: self.TerritoryWar(war_data) for territory, war_data in response['territorywars'].items()}
+                logger.info("Fetched territory wars data successfully")
+                return self.data
+
+            except Exception as e:
+                logger.error(f"Error fetching territory wars data: {e}")
+                return None
+
+        class TerritoryWar:
+            def __init__(self, data: Dict[str, Any]):
+                self.assaulting_faction = data.get('assaulting_faction', 0)
+                self.defending_faction = data.get('defending_faction', 0)
+                self.ends = data.get('ends', 0)
+                self.required_score = data.get('required_score', 0)
+                self.score = data.get('score', 0)
+                self.started = data.get('started', 0)
+                self.territory_war_id = data.get('territory_war_id', 0)
+                logger.debug(f"Processed TerritoryWar: {self}")
+
+            def __repr__(self):
+                return (f"TerritoryWar(assaulting_faction={self.assaulting_faction}, "
+                        f"defending_faction={self.defending_faction}, ends={self.ends}, "
+                        f"required_score={self.required_score}, score={self.score}, "
+                        f"started={self.started}, territory_war_id={self.territory_war_id})")
+
+    class Timestamp:
+        def __init__(self):
+            self.timestamp = int(datetime.now().timestamp())
+            logger.info(f"Initialized Timestamp with value: {self.timestamp}")
+
+        def fetch_data(self):
+            """
+            Get the current time as an epoch timestamp in seconds.
+
+            Returns:
+            - int: The current epoch timestamp in seconds.
+            """
+            self.timestamp = int(datetime.now().timestamp())
+            logger.debug(f"Updated Timestamp to current value: {self.timestamp}")
+            return self.timestamp
+
+        def __repr__(self):
+            return f"Timestamp(timestamp={self.timestamp})"
+                
+                
+            
+if __name__ == "__main__":
+     api = TornAPI()
