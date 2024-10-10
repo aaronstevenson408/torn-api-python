@@ -1,8 +1,12 @@
 import requests
+import time
+from collections import deque
+from threading import Lock
 from urllib.parse import urlencode
 from logger import setup_logger
 from env_loader import load_environment_variables
-from rate_limiter import RateLimiter
+# from rate_limiter import RateLimiter
+from functools import lru_cache
 
 class TornAPI:
     def __init__(self, access_level='full'):
@@ -15,7 +19,7 @@ class TornAPI:
         self.logger, self.file_handler = setup_logger('TornAPI', env['DEBUG_LEVEL'])
         
         # Initialize the rate limiter
-        self.rate_limiter = RateLimiter(limit=100, timeframe=60)  # Adjust as necessary
+        self.rate_limiter = RateLimiter(limit=90, timeframe=60, backoff_factor=2)  # Adjusted limit for safety
 
         # Retrieve the API key based on the specified access level
         self.api_key = env['API_KEYS'].get(access_level)
@@ -25,12 +29,28 @@ class TornAPI:
 
         self.logger.info("TornAPI initialized with access level: %s", access_level)
 
-    def make_request(self, section, id, selections=None, parameters=None):
-        # Ensure the rate limiter allows the request
-        if self.rate_limiter.request_allowed():
-            self.logger.info("Request is allowed.")
-            self.rate_limiter.log_request()
+    @lru_cache(maxsize=128)
+    def _get_cache_key(self, section, id, selections, parameters):
+        """Generate a unique cache key based on request parameters."""
+        params = {'section': section, 'id': id, 'selections': selections}
+        if parameters:
+            params.update(parameters)
+        return urlencode(sorted(params.items()))
 
+    def make_request(self, section, id, selections=None, parameters=None):
+        # Generate cache key
+        cache_key = self._get_cache_key(section, id, selections, frozenset(parameters.items()) if parameters else None)
+        
+        # Check cache
+        cached_response = self._get_from_cache(cache_key)
+        if cached_response:
+            self.logger.info(f"Using cached response for {cache_key}")
+            return cached_response
+
+        while True:
+            self.rate_limiter.wait_for_next_request()
+            self.rate_limiter.log_request()
+            
             # Base URL
             url = f"https://api.torn.com/{section}/{id}"
 
@@ -39,7 +59,12 @@ class TornAPI:
 
             # Add selections if available
             if selections:
-                query_params['selections'] = selections
+                if isinstance(selections, (list, tuple)):
+                    query_params['selections'] = ','.join(selections)
+                elif isinstance(selections, str):
+                    query_params['selections'] = selections
+                else:
+                    self.logger.warning(f"Invalid selections type: {type(selections)}. Expected list, tuple, or string.")
 
             # Add additional parameters if provided
             if parameters:
@@ -62,17 +87,41 @@ class TornAPI:
                 # Handle error in the response
                 if 'error' in json_response:
                     error_code = json_response['error']['code']
-                    self.logger.error(f"Error occurred: {self.interpret_error(error_code)}")
+                    error_message = self.interpret_error(error_code)
+                    self.logger.error(f"Error occurred: {error_message}")
+                    
+                    if error_code == 5:  # Too many requests (rate limit hit)
+                        self.rate_limiter.increase_wait_time()
+                        continue  # Retry the request
+                    
                     return None
 
+                # Cache the successful response
+                self._add_to_cache(cache_key, json_response)
+
                 return json_response
-            
+                
             except requests.exceptions.RequestException as e:
                 self.logger.error(f"Request failed: {e}")
                 return None
-        else:
-            self.logger.warning("Rate limit exceeded. Request not allowed.")
-            return None
+
+    def _get_from_cache(self, key):
+        """Retrieve a response from the cache if available."""
+        # Implement a simple time-based cache
+        current_time = time.time()
+        if hasattr(self, 'cache') and key in self.cache:
+            cached_time, data = self.cache[key]
+            if current_time - cached_time < 30:  # 30 seconds cache duration
+                return data
+            else:
+                del self.cache[key]
+        return None
+
+    def _add_to_cache(self, key, data):
+        """Add a response to the cache."""
+        if not hasattr(self, 'cache'):
+            self.cache = {}
+        self.cache[key] = (time.time(), data)
 
     def close(self):
         """Close the logger handlers to free resources."""
@@ -105,6 +154,62 @@ class TornAPI:
         }
         
         return error_messages.get(error_code, "Unknown error code. Please check the API documentation.")
+
+class RateLimiter:
+    def __init__(self, limit=90, timeframe=60, backoff_factor=2):
+        """
+        Initializes the rate limiter.
+        
+        :param limit: Maximum number of requests allowed in the specified timeframe.
+        :param timeframe: Timeframe in seconds for the limit.
+        :param backoff_factor: Factor to multiply wait time when rate limited.
+        """
+        self.limit = limit
+        self.timeframe = timeframe
+        self.backoff_factor = backoff_factor
+        self.requests = deque()
+        self.current_wait_time = 0
+        self.lock = Lock()
+        env = load_environment_variables()
+        if env is None:
+            raise ValueError("Failed to load environment variables.")
+
+        self.logger, self.file_handler = setup_logger('RateLimiter', env['DEBUG_LEVEL'])
+
+    def _clean_up(self):
+        """Remove requests older than the timeframe."""
+        current_time = time.time()
+        while self.requests and current_time - self.requests[0] > self.timeframe:
+            self.requests.popleft()
+
+    def log_request(self):
+        """Log the current request timestamp."""
+        with self.lock:
+            self._clean_up()
+            self.requests.append(time.time())
+            self.logger.debug(f"Request logged. Current count: {len(self.requests)}")
+
+    def wait_for_next_request(self):
+        """Wait until the next request is allowed."""
+        with self.lock:
+            self._clean_up()
+            if len(self.requests) >= self.limit:
+                wait_time = self.timeframe - (time.time() - self.requests[0])
+                wait_time = max(wait_time, self.current_wait_time)
+                self.logger.warning(f"Rate limit reached. Waiting {wait_time:.2f} seconds before next request...")
+                time.sleep(wait_time)
+                self.current_wait_time = self.current_wait_time * self.backoff_factor
+            else:
+                self.current_wait_time = 0
+
+    def increase_wait_time(self):
+        """Increase the wait time when a rate limit is hit."""
+        with self.lock:
+            self.current_wait_time = max(self.timeframe, self.current_wait_time * self.backoff_factor)
+            self.logger.warning(f"Rate limit hit. Increasing wait time to {self.current_wait_time:.2f} seconds.")
+
+# Note: IP Limit of 1,000 calls per minute is not implemented here.
+# This would require tracking requests across all instances of TornAPI.
 
 # Example usage
 if __name__ == "__main__":

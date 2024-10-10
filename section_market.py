@@ -21,6 +21,7 @@ class Market:
         self.lookup = self.Lookup(self.api)
         self.pointsmarket = self.PointsMarket(self.api)
         self.timestamp = self.Timestamp(self.api)
+        self.combined_market = self.CombinedMarket(self.api, self.item_id)
 
     class Bazaar:
         def __init__(self, api: TornAPI, item_id: Optional[int]):
@@ -196,6 +197,54 @@ class Market:
 
         def __repr__(self):
             return f"Timestamp(timestamp={self.data})"
+
+    class CombinedMarket:
+        def __init__(self, api: TornAPI, item_id: Optional[int]):
+            self.api = api
+            self.item_id = item_id
+            self.data = None
+            logger.info(f"Initialized CombinedMarket for Item ID: {self.item_id}")
+
+        def fetch_data(self, selections):
+            """Fetch combined market data for the specified selections."""
+            if isinstance(selections, str):
+                selections = [s.strip() for s in selections.split(',')]
+            elif isinstance(selections, (list, tuple)):
+                selections = list(selections)
+            else:
+                raise ValueError("Selections must be a comma-separated string, list, or tuple")
+
+            logger.debug(f"Fetching combined market data for Item ID: {self.item_id}, Selections: {selections}")
+            try:
+                response = self.api.make_request('market', self.item_id, ','.join(selections))
+                if response:
+                    self.data = self.CombinedMarketData(response)
+                    logger.info(f"Fetched combined market data for Item ID: {self.item_id}")
+                    return self.data
+                else:
+                    logger.warning(f"No combined market data found for Item ID: {self.item_id}")
+                    return None
+            except Exception as e:
+                logger.error(f"Error fetching combined market data for Item ID: {self.item_id}: {e}")
+                return None
+
+        class CombinedMarketData:
+            def __init__(self, data: Dict[str, Any]):
+                self.bazaar = [self.MarketItem(item) for item in data.get('bazaar', [])]
+                self.itemmarket = [self.MarketItem(item) for item in data.get('itemmarket', [])]
+                logger.debug(f"Processed CombinedMarketData: {self}")
+
+            class MarketItem:
+                def __init__(self, item: Dict[str, Any]):
+                    self.cost = item.get('cost', 0)
+                    self.quantity = item.get('quantity', 0)
+
+            def __repr__(self):
+                return f"CombinedMarketData(bazaar_items={len(self.bazaar)}, itemmarket_items={len(self.itemmarket)})"
+
+            def __str__(self):
+                return f"Bazaar offers: {[{'cost': item.cost, 'quantity': item.quantity} for item in self.bazaar]}\n" \
+                       f"Item market offers: {[{'cost': item.cost, 'quantity': item.quantity} for item in self.itemmarket]}"
 
 
 

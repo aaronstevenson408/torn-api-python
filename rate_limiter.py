@@ -38,6 +38,7 @@ class RateLimiter:
         else:
             self.logger.debug("Request limit exceeded")
             raise Exception("Request limit exceeded")  # Raise an error if the limit is exceeded
+            time.sleep(self.rate_limit_delay)
 
 
 # # Usage

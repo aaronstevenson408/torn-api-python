@@ -1,5 +1,12 @@
 item_scanner.py
-
+market_price_grabber.py
+market_snapshot/
+reports/
+data/
+market_analyzer.py
+reports*
+market_report*
+report_template.html
 #Custom removals
 idea/
 # Byte-compiled / optimized / DLL files
@@ -164,3 +171,5 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+Market_analyzer_2.py
+marketgrabber.bat
